@@ -1,6 +1,9 @@
 <Project>
 
     <PropertyGroup>
+        <Authors>Aliaksandr Pidlazhevich</Authors>
+        <Copyright>Copyright (c) 2026 Aliaksandr Pidlazhevich</Copyright>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>

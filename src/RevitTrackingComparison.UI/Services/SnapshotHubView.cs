@@ -1,13 +1,11 @@
+using Microsoft.Win32;
 using RevitTrackingComparison.Core.Abstractions;
+using RevitTrackingComparison.Core.Domain.Diff;
 using RevitTrackingComparison.UI.ViewModels;
 using RevitTrackingComparison.UI.Views;
 
 namespace RevitTrackingComparison.UI.Services;
 
-/// <summary>
-/// Opens the snapshot hub and its child windows (settings, compare). All windows are modeless
-/// (<c>Show()</c>) — required because taking a snapshot goes through an ExternalEvent.
-/// </summary>
 public sealed class SnapshotHubView : ISnapshotHubView
 {
     private readonly ISnapshotCommands _commands;
@@ -58,14 +56,35 @@ public sealed class SnapshotHubView : ISnapshotHubView
     private void OpenCompare(string project)
     {
         var viewModel = new SnapshotCompareViewModel(
-            _store, _comparer, _editor, _loggerFactory.CreateLogger<SnapshotCompareViewModel>(), project);
+            _store, _comparer, _loggerFactory.CreateLogger<SnapshotCompareViewModel>(), project, ShowComparison);
         new SnapshotCompareWindow(viewModel).Show();
+    }
+
+    private void ShowComparison(SnapshotDiff diff)
+    {
+        var viewModel = new ComparisonViewModel(_editor);
+        viewModel.Load(diff);
+        new ComparisonWindow(viewModel).Show();
     }
 
     private void OpenExport(string project)
     {
         var viewModel = new SnapshotExportViewModel(
-            _store, _loggerFactory.CreateLogger<SnapshotExportViewModel>(), project);
+            _store, _loggerFactory.CreateLogger<SnapshotExportViewModel>(), project, PromptCsvSavePath);
         new SnapshotExportWindow(viewModel).Show();
+    }
+
+    private static string? PromptCsvSavePath(string suggestedName)
+    {
+        var dialog = new SaveFileDialog
+        {
+            Title = "Export snapshot to CSV",
+            Filter = "CSV (*.csv)|*.csv|All files (*.*)|*.*",
+            DefaultExt = "csv",
+            FileName = suggestedName,
+            AddExtension = true
+        };
+
+        return dialog.ShowDialog() == true ? dialog.FileName : null;
     }
 }

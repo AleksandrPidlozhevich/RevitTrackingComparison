@@ -3,7 +3,6 @@ using System.Globalization;
 using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Microsoft.Win32;
 using RevitTrackingComparison.Core.Abstractions;
 using RevitTrackingComparison.Core.Domain;
 using RevitTrackingComparison.Core.Services;
@@ -14,6 +13,7 @@ public partial class SnapshotExportViewModel : ObservableObject
 {
     private readonly ISnapshotStore _store;
     private readonly IPluginLogger _logger;
+    private readonly Func<string, string?> _promptSavePath;
 
     public ObservableCollection<SnapshotInfo> Snapshots { get; } = new();
 
@@ -25,11 +25,17 @@ public partial class SnapshotExportViewModel : ObservableObject
 
     public string Project { get; }
 
-    public SnapshotExportViewModel(ISnapshotStore store, IPluginLogger<SnapshotExportViewModel> logger, string project)
+    // promptSavePath: given a suggested file name, returns the chosen full path or null if cancelled.
+    public SnapshotExportViewModel(
+        ISnapshotStore store,
+        IPluginLogger<SnapshotExportViewModel> logger,
+        string project,
+        Func<string, string?> promptSavePath)
     {
         _store = store;
         _logger = logger;
         Project = project;
+        _promptSavePath = promptSavePath;
     }
 
     // Triggered when the window loads; keeps file I/O off the constructor (and off the UI thread).
@@ -68,16 +74,8 @@ public partial class SnapshotExportViewModel : ObservableObject
         if (SelectedSnapshot is null)
             return;
 
-        var dialog = new SaveFileDialog
-        {
-            Title = "Export snapshot to CSV",
-            Filter = "CSV (*.csv)|*.csv|All files (*.*)|*.*",
-            DefaultExt = "csv",
-            FileName = SuggestFileName(SelectedSnapshot),
-            AddExtension = true
-        };
-
-        if (dialog.ShowDialog() != true)
+        var path = _promptSavePath(SuggestFileName(SelectedSnapshot));
+        if (path is null)
             return;
 
         IsExporting = true;
@@ -87,19 +85,19 @@ public partial class SnapshotExportViewModel : ObservableObject
             var snapshot = await _store.LoadAsync(SelectedSnapshot);
             if (snapshot is null)
             {
-                _logger.Warn($"CSV export failed for '{Project}': could not load '{SelectedSnapshot.FileName}'.");
+                _logger.Warn($"CSV export failed for '{Project}': could not load '{SelectedSnapshot.Id}'.");
                 Status = "Could not load the snapshot.";
                 return;
             }
 
-            await Task.Run(() => SnapshotCsvExporter.ExportToFile(snapshot, dialog.FileName));
+            await Task.Run(() => SnapshotCsvExporter.ExportToFile(snapshot, path));
             _logger.Info(
-                $"Exported snapshot '{SelectedSnapshot.FileName}' to '{dialog.FileName}' ({snapshot.Elements.Count} elements).");
-            Status = $"Exported {snapshot.Elements.Count} elements to {Path.GetFileName(dialog.FileName)}.";
+                $"Exported snapshot '{SelectedSnapshot.Id}' to '{path}' ({snapshot.Elements.Count} elements).");
+            Status = $"Exported {snapshot.Elements.Count} elements to {Path.GetFileName(path)}.";
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, $"CSV export failed for '{Project}' snapshot '{SelectedSnapshot.FileName}'.");
+            _logger.Error(ex, $"CSV export failed for '{Project}' snapshot '{SelectedSnapshot.Id}'.");
             Status = "Export failed.";
         }
         finally

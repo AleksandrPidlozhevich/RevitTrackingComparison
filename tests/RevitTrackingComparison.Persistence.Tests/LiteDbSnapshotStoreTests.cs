@@ -16,8 +16,7 @@ public sealed class LiteDbSnapshotStoreTests
     {
         _root = Path.Combine(Path.GetTempPath(), "RTC_Tests_" + Guid.NewGuid().ToString("N"));
         _options = new LiteDbOptions { RootFolder = _root };
-        _sut = new LiteDbSnapshotStore(
-            new LiteDbConnectionFactory(), _options, new TestPluginLogger<LiteDbSnapshotStore>());
+        _sut = new LiteDbSnapshotStore(new LiteDbConnectionFactory(), _options);
     }
 
     [TearDown]
@@ -87,7 +86,7 @@ public sealed class LiteDbSnapshotStoreTests
         var info = await _sut.SaveAsync(snapshot.DocumentKey, snapshot);
 
         Assert.That(info.Project, Is.EqualTo(snapshot.DocumentKey));
-        Assert.That(info.FileName, Does.EndWith(".db"));
+        Assert.That(info.Id.Value, Does.EndWith(".db"));
         Assert.That(info.CapturedAt, Is.EqualTo(snapshot.CapturedAt));
     }
 
@@ -128,7 +127,7 @@ public sealed class LiteDbSnapshotStoreTests
         var firstInfo = await _sut.SaveAsync("p.rvt", first);
         var secondInfo = await _sut.SaveAsync("p.rvt", second);
 
-        Assert.That(secondInfo.FileName, Is.Not.EqualTo(firstInfo.FileName));
+        Assert.That(secondInfo.Id, Is.Not.EqualTo(firstInfo.Id));
         Assert.That(await _sut.ListAsync("p.rvt"), Has.Count.EqualTo(2));
     }
 
@@ -138,9 +137,24 @@ public sealed class LiteDbSnapshotStoreTests
         var info = new SnapshotInfo
         {
             Project = "p.rvt",
-            FileName = "p.rvt_2025.01.01_12.00.00.db",
+            Id = new SnapshotId("p.rvt_2025.01.01_12.00.00.db"),
             CapturedAt = TestSnapshots.DefaultCapturedAt
         };
+
+        var loaded = await _sut.LoadAsync(info);
+
+        Assert.That(loaded, Is.Null);
+    }
+
+    [Test]
+    public async Task LoadAsync_returns_null_for_empty_database()
+    {
+        var info = await _sut.SaveAsync("p.rvt", TestSnapshots.Create(TestSnapshots.Element()));
+
+        // Replace the file with an empty (but valid) database — no snapshot inside.
+        var path = Path.Combine(_options.SnapshotsFolder, "p.rvt", info.Id.Value);
+        File.Delete(path);
+        using (var _ = new LiteDbConnectionFactory().Open(path)) { }
 
         var loaded = await _sut.LoadAsync(info);
 

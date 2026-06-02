@@ -3,17 +3,16 @@ using RevitTrackingComparison.Core.Domain;
 namespace RevitTrackingComparison.Core.Abstractions;
 
 /// <summary>
-/// Stores snapshots as one file per snapshot, grouped by project. A "project" is the document
-/// file name (see RevitDocumentKey). Reads/writes are async because the backing store is file I/O;
-/// callers awaiting them keep the UI thread free.
+/// Stores snapshots grouped by project (a "project" is the document file name, see RevitDocumentKey).
 /// </summary>
+/// <remarks>
+/// Error policy: an absent result is returned, never thrown — <see cref="LoadAsync"/> yields null for a
+/// missing snapshot and <see cref="ListAsync"/> yields an empty list for a project with none.
+/// Unexpected failures (I/O errors, corruption) propagate as exceptions; the store does not log them —
+/// the caller, which has the operation and user context, logs and surfaces them.
+/// </remarks>
 public interface ISnapshotStore
 {
-    /// <summary>
-    /// True if the project already has at least one stored snapshot. Synchronous on purpose: it is a
-    /// cheap metadata check called from the synchronous <c>DocumentOpened</c> Revit event, which must
-    /// stay on the API thread (an async continuation would resume off-thread).
-    /// </summary>
     bool HasSnapshots(string project);
 
     /// <summary>Writes <paramref name="snapshot"/> to a new timestamped file and returns its handle.</summary>

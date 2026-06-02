@@ -3,19 +3,15 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using RevitTrackingComparison.Core.Abstractions;
 using RevitTrackingComparison.Core.Domain;
-using RevitTrackingComparison.UI.Views;
+using RevitTrackingComparison.Core.Domain.Diff;
 
 namespace RevitTrackingComparison.UI.ViewModels;
 
-/// <summary>
-/// Lets the user pick two stored snapshots of the project and compare them; the diff is shown by
-/// reusing <see cref="ComparisonWindow"/>.
-/// </summary>
 public partial class SnapshotCompareViewModel : ObservableObject
 {
     private readonly ISnapshotStore _store;
     private readonly ISnapshotComparer _comparer;
-    private readonly IModelEditor _editor;
+    private readonly Action<SnapshotDiff> _showComparison;
     private readonly IPluginLogger _logger;
 
     public ObservableCollection<SnapshotInfo> Snapshots { get; } = new();
@@ -31,15 +27,15 @@ public partial class SnapshotCompareViewModel : ObservableObject
     public SnapshotCompareViewModel(
         ISnapshotStore store,
         ISnapshotComparer comparer,
-        IModelEditor editor,
         IPluginLogger<SnapshotCompareViewModel> logger,
-        string project)
+        string project,
+        Action<SnapshotDiff> showComparison)
     {
         _store = store;
         _comparer = comparer;
-        _editor = editor;
         _logger = logger;
         Project = project;
+        _showComparison = showComparison;
     }
 
     // Triggered when the window loads; keeps file I/O off the constructor (and off the UI thread).
@@ -78,24 +74,22 @@ public partial class SnapshotCompareViewModel : ObservableObject
             if (from is null || to is null)
             {
                 _logger.Warn(
-                    $"Compare failed for '{Project}': could not load '{From.FileName}' or '{To.FileName}'.");
+                    $"Compare failed for '{Project}': could not load '{From.Id}' or '{To.Id}'.");
                 Status = "Could not load the snapshots.";
                 return;
             }
 
             var diff = _comparer.Compare(from, to);
             _logger.Info(
-                $"Compared snapshots for '{Project}': '{From.FileName}' -> '{To.FileName}' " +
+                $"Compared snapshots for '{Project}': '{From.Id}' -> '{To.Id}' " +
                 $"(+{diff.Added.Count} -{diff.Removed.Count} ~{diff.Modified.Count}).");
-            var viewModel = new ComparisonViewModel(_editor);
-            viewModel.Load(diff);
-            new ComparisonWindow(viewModel).Show();
+            _showComparison(diff);
             Status = string.Empty;
         }
         catch (Exception ex)
         {
             _logger.Error(ex,
-                $"Compare failed for '{Project}' ('{From.FileName}' -> '{To.FileName}').");
+                $"Compare failed for '{Project}' ('{From.Id}' -> '{To.Id}').");
             Status = "Compare failed.";
         }
     }

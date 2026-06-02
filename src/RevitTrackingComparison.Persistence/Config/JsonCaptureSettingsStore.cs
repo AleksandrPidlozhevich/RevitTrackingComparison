@@ -45,25 +45,19 @@ public sealed class JsonCaptureSettingsStore : ICaptureSettingsStore
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, $"Failed to read capture config from '{path}'; using defaults.");
+            // Deliberate graceful degradation: a corrupt config must not break the plugin. Logged here
+            // (at Warn) because the caller only sees defaults and cannot tell them from a real config.
+            _logger.Warn($"Failed to read capture config from '{path}' ({ex.Message}); using defaults.");
             return Default();
         }
     }
 
     public void Save(CaptureSettings settings)
     {
-        var path = _options.CaptureConfigPath;
-        try
-        {
-            Directory.CreateDirectory(_options.RootFolder);
-            File.WriteAllText(path, JsonSerializer.Serialize(SettingsDto.FromDomain(settings), JsonOptions));
-            _logger.Info($"Capture config saved to '{path}' ({settings.Rules.Count} rules).");
-        }
-        catch (Exception ex)
-        {
-            _logger.Error(ex, $"Failed to save capture config to '{path}'.");
-            throw;
-        }
+        Directory.CreateDirectory(_options.RootFolder);
+        File.WriteAllText(
+            _options.CaptureConfigPath,
+            JsonSerializer.Serialize(SettingsDto.FromDomain(settings), JsonOptions));
     }
 
     private static CaptureSettings Default()

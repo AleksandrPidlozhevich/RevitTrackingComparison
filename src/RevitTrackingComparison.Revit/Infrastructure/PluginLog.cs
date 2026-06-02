@@ -8,10 +8,6 @@ using RevitTrackingComparison.Core.Configuration;
 
 namespace RevitTrackingComparison.Revit.Infrastructure;
 
-// Owns NLog configuration (one file per day under %AppData%\TrackingComparison\log) and hands out
-// named loggers. Application code injects IPluginLogger<T>; static infrastructure that cannot use DI
-// calls PluginLog.For(category). Configuration is idempotent and self-healing: any entry point
-// triggers it, so loggers obtained before Initialize() still write to the file target.
 public static class PluginLog
 {
     private const string Layout =

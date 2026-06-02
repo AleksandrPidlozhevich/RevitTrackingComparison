@@ -4,10 +4,6 @@ using RevitTrackingComparison.Core.Abstractions;
 
 namespace RevitTrackingComparison.Revit.Infrastructure;
 
-// The single bridge between Revit-instantiated IExternalCommands (no DI) and the container.
-// Revit creates commands by reflection, so they cannot take constructor dependencies; instead a
-// command resolves exactly one service here and delegates to it. Keeping this the only service-locator
-// point means the rest of the code stays on constructor injection.
 internal static class CommandHost
 {
     private static readonly IPluginLogger Logger = PluginLog.For(nameof(CommandHost));

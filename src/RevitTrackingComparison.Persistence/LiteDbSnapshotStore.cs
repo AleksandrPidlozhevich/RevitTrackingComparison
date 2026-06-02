@@ -5,11 +5,6 @@ using RevitTrackingComparison.Persistence.Entities;
 
 namespace RevitTrackingComparison.Persistence;
 
-/// <summary>
-/// Stores each snapshot as its own LiteDB file under
-/// <c>{SnapshotsFolder}\{project}\{project}_{yyyy.MM.dd_HH.mm.ss}.db</c> (dots; colons are invalid in file names).
-/// Legacy files <c>yyyyMMdd_HHmmss</c> remain readable.
-/// </summary>
 public sealed class LiteDbSnapshotStore : ISnapshotStore
 {
     private const string Snapshots = "snapshots";
@@ -20,16 +15,11 @@ public sealed class LiteDbSnapshotStore : ISnapshotStore
 
     private readonly ILiteDbConnectionFactory _connectionFactory;
     private readonly LiteDbOptions _options;
-    private readonly IPluginLogger _logger;
 
-    public LiteDbSnapshotStore(
-        ILiteDbConnectionFactory connectionFactory,
-        LiteDbOptions options,
-        IPluginLogger<LiteDbSnapshotStore> logger)
+    public LiteDbSnapshotStore(ILiteDbConnectionFactory connectionFactory, LiteDbOptions options)
     {
         _connectionFactory = connectionFactory;
         _options = options;
-        _logger = logger;
     }
 
     public bool HasSnapshots(string project)
@@ -57,22 +47,12 @@ public sealed class LiteDbSnapshotStore : ISnapshotStore
         var fileName = UniqueFileName(folder, safeProject, snapshot.CapturedAt);
         var path = Path.Combine(folder, fileName);
 
-        try
+        using (var db = _connectionFactory.Open(path))
         {
-            using (var db = _connectionFactory.Open(path))
-            {
-                db.GetCollection<SnapshotEntity>(Snapshots).Insert(snapshot.ToEntity());
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.Error(ex, $"Failed to save snapshot '{path}' for project '{project}'.");
-            throw;
+            db.GetCollection<SnapshotEntity>(Snapshots).Insert(snapshot.ToEntity());
         }
 
-        _logger.Info(
-            $"Snapshot saved for '{project}': '{fileName}' ({snapshot.Elements.Count} elements).");
-        return new SnapshotInfo { Project = project, FileName = fileName, CapturedAt = snapshot.CapturedAt };
+        return new SnapshotInfo { Project = project, Id = new SnapshotId(fileName), CapturedAt = snapshot.CapturedAt };
     }
 
     private IReadOnlyList<SnapshotInfo> List(string project)
@@ -85,7 +65,7 @@ public sealed class LiteDbSnapshotStore : ISnapshotStore
             .Select(path => new SnapshotInfo
             {
                 Project = project,
-                FileName = Path.GetFileName(path),
+                Id = new SnapshotId(Path.GetFileName(path)),
                 CapturedAt = ParseTimestamp(Path.GetFileNameWithoutExtension(path)) ?? File.GetLastWriteTime(path)
             })
             .OrderByDescending(info => info.CapturedAt)
@@ -94,30 +74,13 @@ public sealed class LiteDbSnapshotStore : ISnapshotStore
 
     private DocumentSnapshot? Load(SnapshotInfo info)
     {
-        var path = Path.Combine(ProjectFolder(Sanitize(info.Project)), info.FileName);
+        var path = Path.Combine(ProjectFolder(Sanitize(info.Project)), info.Id.Value);
         if (!File.Exists(path))
-        {
-            _logger.Warn($"Snapshot file not found: '{path}'.");
             return null;
-        }
 
-        try
-        {
-            using var db = _connectionFactory.Open(path);
-            var entity = db.GetCollection<SnapshotEntity>(Snapshots).Query().FirstOrDefault();
-            if (entity is null)
-            {
-                _logger.Warn($"Snapshot database is empty: '{path}'.");
-                return null;
-            }
-
-            return entity.ToDomain();
-        }
-        catch (Exception ex)
-        {
-            _logger.Error(ex, $"Failed to load snapshot '{path}'.");
-            throw;
-        }
+        using var db = _connectionFactory.Open(path);
+        var entity = db.GetCollection<SnapshotEntity>(Snapshots).Query().FirstOrDefault();
+        return entity?.ToDomain();
     }
 
     private string ProjectFolder(string safeProject)

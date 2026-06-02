@@ -5,8 +5,6 @@ using RevitTrackingComparison.UI.Services;
 
 namespace RevitTrackingComparison.Revit.Commands;
 
-// Opens the snapshot hub for the active document. DI-built (constructor injection); the command is a
-// thin shell that resolves this and calls Open.
 public sealed class SnapshotHubLauncher
 {
     private readonly RevitContext _context;
