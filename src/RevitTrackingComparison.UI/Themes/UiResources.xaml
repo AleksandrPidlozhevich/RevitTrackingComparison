@@ -28,6 +28,25 @@
         <Setter Property="HorizontalAlignment" Value="Stretch" />
     </Style>
 
+    <!-- Snapshot pickers: cap dropdown height; scroll when there are many or wide items. -->
+    <Style x:Key="SnapshotComboBox" TargetType="ComboBox"
+           BasedOn="{StaticResource MaterialDesignOutlinedComboBox}">
+        <Setter Property="MaxDropDownHeight" Value="240" />
+        <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
+        <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto" />
+        <Setter Property="VirtualizingStackPanel.IsVirtualizing" Value="True" />
+        <Setter Property="VirtualizingStackPanel.VirtualizationMode" Value="Recycling" />
+        <Setter Property="ItemTemplate">
+            <Setter.Value>
+                <DataTemplate>
+                    <TextBlock Text="{Binding DisplayName}"
+                               TextWrapping="NoWrap"
+                               ToolTip="{Binding DisplayName}" />
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <Style x:Key="FlatDataGrid" TargetType="DataGrid" BasedOn="{StaticResource MaterialDesignDataGrid}">
         <Setter Property="AutoGenerateColumns" Value="False" />
         <Setter Property="IsReadOnly" Value="True" />

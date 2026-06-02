@@ -1,8 +1,13 @@
 <Solution>
     <Folder Name="/src/">
-        <Project Path="src/RevitTrackingComparison.Core/RevitTrackingComparison.Core.csproj"/>
-        <Project Path="src/RevitTrackingComparison.Persistence/RevitTrackingComparison.Persistence.csproj"/>
-        <Project Path="src/RevitTrackingComparison.UI/RevitTrackingComparison.UI.csproj"/>
-        <Project Path="src/RevitTrackingComparison.Revit/RevitTrackingComparison.Revit.csproj"/>
+        <Project Path="src/RevitTrackingComparison.Core/RevitTrackingComparison.Core.csproj" />
+        <Project Path="src/RevitTrackingComparison.Persistence/RevitTrackingComparison.Persistence.csproj" />
+        <Project Path="src/RevitTrackingComparison.UI/RevitTrackingComparison.UI.csproj" />
+        <Project Path="src/RevitTrackingComparison.Revit/RevitTrackingComparison.Revit.csproj" />
+    </Folder>
+    <Folder Name="/tests/">
+        <Project Path="tests/RevitTrackingComparison.Core.Tests/RevitTrackingComparison.Core.Tests.csproj">
+            <Platform Project="x64" />
+        </Project>
     </Folder>
 </Solution>
