@@ -5,17 +5,10 @@ using System.Windows.Media.Imaging;
 
 namespace RevitTrackingComparison.Revit.Infrastructure;
 
-/// <summary>
-/// Loads the ribbon icon for Revit push buttons from the single PNG embedded in this assembly
-/// (<c>Resources\ab-testing.png</c>); Revit does not resolve WPF pack URIs reliably, and embedding
-/// avoids depending on the loose file being copied alongside the add-in at deploy time.
-/// </summary>
-/// <remarks>
-/// The ribbon sizes icons by their device-independent (DIP) dimensions and expects 32x32 / 16x16.
-/// Our PNG was authored at ~6 DPI, so WPF reports its DIP size as 32 * (96 / 6) ≈ 512, which overflows
-/// the button slot and renders blank. Every decoded image is therefore normalised to 96 DPI so the
-/// DIP size equals the pixel size. The 16x16 small image is decoded from the same 32x32 source.
-/// </remarks>
+// Loads the ribbon icon from the PNG embedded in this assembly (Revit doesn't resolve WPF pack URIs
+// reliably, and embedding avoids depending on the loose file at deploy time).
+// The icon must be normalised to 96 DPI: the source PNG is ~6 DPI, so WPF reports its DIP size as
+// 32 * (96 / 6) ≈ 512, which overflows the button slot (sized by DIP, not pixels) and renders blank.
 internal static class RibbonIconLoader
 {
     private const string EmbeddedResourceName = "RevitTrackingComparison.Revit.Resources.ab-testing.png";
@@ -59,10 +52,7 @@ internal static class RibbonIconLoader
         }
     }
 
-    /// <summary>
-    /// Rebuilds the decoded image at 96 DPI so its DIP size equals its pixel size; the source PNG's
-    /// low embedded resolution would otherwise make the icon overflow the ribbon slot and disappear.
-    /// </summary>
+    // Rebuilds the image at 96 DPI so its DIP size equals its pixel size (see class note).
     private static BitmapSource Normalize(BitmapImage image)
     {
         var bgra = image.Format == PixelFormats.Bgra32

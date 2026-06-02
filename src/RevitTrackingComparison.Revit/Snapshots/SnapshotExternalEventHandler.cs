@@ -7,13 +7,9 @@ using RevitTrackingComparison.Revit.Infrastructure;
 
 namespace RevitTrackingComparison.Revit.Snapshots;
 
-/// <summary>
-/// ExternalEvent handler for manual snapshots. The Revit API is single-threaded, so the model must be
-/// read on the API thread — but reading it all at once would freeze the UI. Instead the capture is run
-/// in small slices on the <see cref="UIApplication.Idling"/> event: each tick reads one batch and then
-/// returns control to Revit (<see cref="IdlingEventArgs.SetRaiseWithoutDelay"/> requests the next tick),
-/// so the interface stays responsive throughout. The LiteDB write is then offloaded to a background thread.
-/// </summary>
+// Manual snapshots. The API is single-threaded, so the model is read on the API thread — but in small
+// slices on the Idling event (SetRaiseWithoutDelay resumes the next tick), so the UI stays responsive
+// instead of freezing on one long read. The LiteDB write is then offloaded to a background thread.
 internal sealed class SnapshotExternalEventHandler : IExternalEventHandler
 {
     private const int BatchSize = 250;

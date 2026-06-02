@@ -4,10 +4,6 @@ using RevitTrackingComparison.Core.Domain;
 
 namespace RevitTrackingComparison.Revit.Snapshots;
 
-/// <summary>
-/// Captures a <see cref="DocumentSnapshot"/> from a Revit document, recording only the categories
-/// and parameters listed in the capture configuration.
-/// </summary>
 public sealed class RevitSnapshotProvider
 {
     private readonly ICaptureSettingsStore _settingsStore;
@@ -17,11 +13,7 @@ public sealed class RevitSnapshotProvider
         _settingsStore = settingsStore;
     }
 
-    /// <summary>
-    /// Begins an incremental capture: the configured elements are listed up front, then read in slices
-    /// via <see cref="CaptureSession.ProcessBatch"/> so the API thread can be yielded between slices.
-    /// Reads the model, so it must run on the Revit API thread. Returns null if there is no document.
-    /// </summary>
+    // Lists the configured elements up front; the caller reads them in slices. Must run on the API thread.
     public CaptureSession? BeginCapture(Document? doc)
     {
         if (doc is null)
@@ -38,10 +30,7 @@ public sealed class RevitSnapshotProvider
         return new CaptureSession(doc, settings, ids);
     }
 
-    /// <summary>
-    /// Captures the whole document in a single pass. Convenience for non-interactive callers (e.g. the
-    /// open trigger) where slicing isn't needed. Reads the model, so it must run on the API thread.
-    /// </summary>
+    // Single-pass capture for non-interactive callers (open trigger), where slicing isn't needed.
     public DocumentSnapshot? Capture(Document? doc)
     {
         var session = BeginCapture(doc);

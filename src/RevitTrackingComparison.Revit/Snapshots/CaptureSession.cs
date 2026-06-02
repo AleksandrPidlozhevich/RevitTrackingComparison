@@ -4,12 +4,8 @@ using RevitTrackingComparison.Revit.Infrastructure;
 
 namespace RevitTrackingComparison.Revit.Snapshots;
 
-/// <summary>
-/// An in-progress capture of a Revit document. The element list is collected up front (cheap), then
-/// the expensive per-element parameter reads are done in slices via <see cref="ProcessBatch"/>. Because
-/// the Revit API is single-threaded, this all runs on the API thread — but the caller can yield that
-/// thread between slices (e.g. on <c>Idling</c>) so the UI stays responsive during a large capture.
-/// </summary>
+// Reads a document in slices so the (single-threaded) API thread can be yielded between batches and
+// the UI stays responsive. Element ids are listed up front; the expensive parameter reads are sliced.
 public sealed class CaptureSession
 {
     private readonly Document _doc;
@@ -28,19 +24,11 @@ public sealed class CaptureSession
         _capturedAt = DateTime.Now; // point-in-time is the start of the capture
     }
 
-    /// <summary>Total number of elements to read.</summary>
     public int Total => _ids.Count;
-
-    /// <summary>Number of elements read so far.</summary>
     public int Processed => _index;
-
-    /// <summary>True once every element has been read.</summary>
     public bool IsComplete => _index >= _ids.Count;
 
-    /// <summary>
-    /// Reads up to <paramref name="batchSize"/> more elements into the snapshot. Runs on the API thread;
-    /// keep the batch small so the thread is released quickly between calls.
-    /// </summary>
+    // Runs on the API thread; keep the batch small so the thread is released quickly between calls.
     public void ProcessBatch(int batchSize)
     {
         var take = Math.Min(Math.Max(batchSize, 1), _ids.Count - _index);
@@ -53,7 +41,6 @@ public sealed class CaptureSession
         }
     }
 
-    /// <summary>Builds the finished snapshot. Call once <see cref="IsComplete"/> is true.</summary>
     public DocumentSnapshot BuildSnapshot() => new()
     {
         DocumentKey = RevitDocumentKey.Compute(_doc),

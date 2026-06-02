@@ -3,10 +3,8 @@ using RevitTrackingComparison.Core.Abstractions;
 
 namespace RevitTrackingComparison.Revit.Snapshots;
 
-/// <summary>
-/// Revit implementation of <see cref="ISnapshotCommands"/>: a manual snapshot raised via an
-/// ExternalEvent so it runs in a valid API context even when triggered from the modeless hub window.
-/// </summary>
+// Raised via an ExternalEvent so the capture runs in a valid API context even when triggered
+// from the modeless hub window.
 public sealed class RevitSnapshotCommands : ISnapshotCommands, IDisposable
 {
     private readonly SnapshotExternalEventHandler _handler;
