@@ -113,7 +113,7 @@ internal sealed class SnapshotExternalEventHandler : IExternalEventHandler
             EndSession();
 
             progress?.Report(new SnapshotProgress(SnapshotProgressPhase.Saving, snapshot.Elements.Count));
-            Task.Run(() => Persist(snapshot, completion));
+            _ = PersistAsync(snapshot, completion); // SaveAsync offloads the write off the API thread
         }
         catch (Exception ex)
         {
@@ -137,11 +137,11 @@ internal sealed class SnapshotExternalEventHandler : IExternalEventHandler
         return "RevitTrackingComparison.TakeSnapshot";
     }
 
-    private void Persist(DocumentSnapshot snapshot, TaskCompletionSource<SnapshotResult> completion)
+    private async Task PersistAsync(DocumentSnapshot snapshot, TaskCompletionSource<SnapshotResult> completion)
     {
         try
         {
-            var info = _store.Save(snapshot.DocumentKey, snapshot);
+            var info = await _store.SaveAsync(snapshot.DocumentKey, snapshot).ConfigureAwait(false);
             completion.TrySetResult(SnapshotResult.Ok(info));
         }
         catch (Exception ex)

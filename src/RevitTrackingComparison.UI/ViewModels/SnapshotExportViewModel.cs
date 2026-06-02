@@ -30,12 +30,26 @@ public partial class SnapshotExportViewModel : ObservableObject
         _store = store;
         _logger = logger;
         Project = project;
+    }
 
-        foreach (var info in store.List(project))
-            Snapshots.Add(info);
+    // Triggered when the window loads; keeps file I/O off the constructor (and off the UI thread).
+    public async Task InitializeAsync()
+    {
+        try
+        {
+            var infos = await _store.ListAsync(Project);
+            Snapshots.Clear();
+            foreach (var info in infos)
+                Snapshots.Add(info);
 
-        SelectedSnapshot = Snapshots.FirstOrDefault();
-        Status = Snapshots.Count == 0 ? "No snapshots available for this project." : string.Empty;
+            SelectedSnapshot = Snapshots.FirstOrDefault();
+            Status = Snapshots.Count == 0 ? "No snapshots available for this project." : string.Empty;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, $"Failed to load snapshots for '{Project}'.");
+            Status = "Could not load snapshots.";
+        }
     }
 
     partial void OnSelectedSnapshotChanged(SnapshotInfo? value)
@@ -49,7 +63,7 @@ public partial class SnapshotExportViewModel : ObservableObject
     }
 
     [RelayCommand(CanExecute = nameof(CanExport))]
-    private void Export()
+    private async Task ExportAsync()
     {
         if (SelectedSnapshot is null)
             return;
@@ -70,7 +84,7 @@ public partial class SnapshotExportViewModel : ObservableObject
         Status = "Exporting…";
         try
         {
-            var snapshot = _store.Load(SelectedSnapshot);
+            var snapshot = await _store.LoadAsync(SelectedSnapshot);
             if (snapshot is null)
             {
                 _logger.Warn($"CSV export failed for '{Project}': could not load '{SelectedSnapshot.FileName}'.");
@@ -78,7 +92,7 @@ public partial class SnapshotExportViewModel : ObservableObject
                 return;
             }
 
-            SnapshotCsvExporter.ExportToFile(snapshot, dialog.FileName);
+            await Task.Run(() => SnapshotCsvExporter.ExportToFile(snapshot, dialog.FileName));
             _logger.Info(
                 $"Exported snapshot '{SelectedSnapshot.FileName}' to '{dialog.FileName}' ({snapshot.Elements.Count} elements).");
             Status = $"Exported {snapshot.Elements.Count} elements to {Path.GetFileName(dialog.FileName)}.";

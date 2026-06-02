@@ -1,12 +1,11 @@
+using RevitTrackingComparison.Core.Configuration;
+
 namespace RevitTrackingComparison.Persistence;
 
 public sealed class LiteDbOptions
 {
-    /// <summary>Data root: %AppData%\TrackingComparison.</summary>
-    public string RootFolder { get; set; } =
-        Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "TrackingComparison");
+    /// <summary>Data root (default %AppData%\TrackingComparison); override for tests.</summary>
+    public string RootFolder { get; set; } = TrackingDataPaths.Root;
 
     /// <summary>Folder holding one subfolder per project, each with one file per snapshot.</summary>
     public string SnapshotsFolder => Path.Combine(RootFolder, "Snapshots");

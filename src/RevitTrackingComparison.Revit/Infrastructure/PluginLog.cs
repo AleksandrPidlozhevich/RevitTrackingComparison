@@ -4,6 +4,7 @@ using NLog;
 using NLog.Config;
 using NLog.Targets;
 using RevitTrackingComparison.Core.Abstractions;
+using RevitTrackingComparison.Core.Configuration;
 
 namespace RevitTrackingComparison.Revit.Infrastructure;
 
@@ -43,15 +44,9 @@ public static class PluginLog
 
         try
         {
-            // %AppData%\TrackingComparison\log — same data root as snapshots and capture config.
-            var logDirectory = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                "TrackingComparison",
-                "log");
-
             Apply(new FileTarget("file")
             {
-                FileName = Path.Combine(logDirectory, "revit-tracking-${shortdate}.log")
+                FileName = Path.Combine(TrackingDataPaths.LogDirectory, "revit-tracking-${shortdate}.log")
             });
         }
         catch (Exception ex)

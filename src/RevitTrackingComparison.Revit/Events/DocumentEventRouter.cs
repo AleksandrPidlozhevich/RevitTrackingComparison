@@ -72,15 +72,17 @@ public sealed class DocumentEventRouter : IDisposable
             if (snapshot.Elements.Count == 0)
                 _logger.Warn($"Initial snapshot for '{project}' captured zero elements.");
 
-            Task.Run(() => Persist(project, snapshot));
+            // Capture above ran on the API thread (required). The write is offloaded by SaveAsync,
+            // so fire-and-forget here keeps the document-open event from blocking.
+            _ = PersistAsync(project, snapshot);
         });
     }
 
-    private void Persist(string project, DocumentSnapshot snapshot)
+    private async Task PersistAsync(string project, DocumentSnapshot snapshot)
     {
         try
         {
-            _store.Save(project, snapshot);
+            await _store.SaveAsync(project, snapshot).ConfigureAwait(false);
             _logger.Info($"Initial snapshot stored for '{project}' ({snapshot.Elements.Count} elements).");
         }
         catch (Exception ex)

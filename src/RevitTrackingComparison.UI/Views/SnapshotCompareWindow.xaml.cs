@@ -11,5 +11,6 @@ public partial class SnapshotCompareWindow : Window
         WindowTheme.Apply(this);
         InitializeComponent();
         DataContext = viewModel;
+        Loaded += async (_, _) => await viewModel.InitializeAsync();
     }
 }

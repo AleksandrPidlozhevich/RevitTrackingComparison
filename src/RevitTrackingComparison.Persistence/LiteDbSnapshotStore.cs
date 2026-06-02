@@ -38,7 +38,17 @@ public sealed class LiteDbSnapshotStore : ISnapshotStore
         return Directory.Exists(folder) && Directory.EnumerateFiles(folder, "*.db").Any();
     }
 
-    public SnapshotInfo Save(string project, DocumentSnapshot snapshot)
+    // LiteDB has no async API; offload the blocking file I/O so the calling (UI/API) thread is free.
+    public Task<SnapshotInfo> SaveAsync(string project, DocumentSnapshot snapshot, CancellationToken cancellationToken = default)
+        => Task.Run(() => Save(project, snapshot), cancellationToken);
+
+    public Task<IReadOnlyList<SnapshotInfo>> ListAsync(string project, CancellationToken cancellationToken = default)
+        => Task.Run(() => List(project), cancellationToken);
+
+    public Task<DocumentSnapshot?> LoadAsync(SnapshotInfo info, CancellationToken cancellationToken = default)
+        => Task.Run(() => Load(info), cancellationToken);
+
+    private SnapshotInfo Save(string project, DocumentSnapshot snapshot)
     {
         var safeProject = Sanitize(project);
         var folder = ProjectFolder(safeProject);
@@ -65,7 +75,7 @@ public sealed class LiteDbSnapshotStore : ISnapshotStore
         return new SnapshotInfo { Project = project, FileName = fileName, CapturedAt = snapshot.CapturedAt };
     }
 
-    public IReadOnlyList<SnapshotInfo> List(string project)
+    private IReadOnlyList<SnapshotInfo> List(string project)
     {
         var folder = ProjectFolder(Sanitize(project));
         if (!Directory.Exists(folder))
@@ -82,7 +92,7 @@ public sealed class LiteDbSnapshotStore : ISnapshotStore
             .ToList();
     }
 
-    public DocumentSnapshot? Load(SnapshotInfo info)
+    private DocumentSnapshot? Load(SnapshotInfo info)
     {
         var path = Path.Combine(ProjectFolder(Sanitize(info.Project)), info.FileName);
         if (!File.Exists(path))

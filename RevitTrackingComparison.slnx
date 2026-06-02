@@ -9,5 +9,8 @@
         <Project Path="tests/RevitTrackingComparison.Core.Tests/RevitTrackingComparison.Core.Tests.csproj">
             <Platform Project="x64"/>
         </Project>
+        <Project Path="tests/RevitTrackingComparison.Persistence.Tests/RevitTrackingComparison.Persistence.Tests.csproj">
+            <Platform Project="x64"/>
+        </Project>
     </Folder>
 </Solution>

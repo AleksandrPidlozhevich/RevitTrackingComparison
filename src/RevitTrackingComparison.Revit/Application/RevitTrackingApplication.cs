@@ -14,21 +14,21 @@ public sealed class RevitTrackingApplication : IExternalApplication
 
     private static readonly IPluginLogger Logger = PluginLog.For(nameof(RevitTrackingApplication));
 
-    public static ServiceProvider? Services { get; private set; }
-
     private RevitContext? _context;
     private DocumentEventRouter? _router;
+    private ServiceProvider? _services;
 
     public Result OnStartup(UIControlledApplication application)
     {
         try
         {
             _context = new RevitContext();
-            Services = ServiceConfiguration.Build(_context);
+            _services = ServiceConfiguration.Build(_context);
+            CommandHost.SetServices(_services);
 
             application.ViewActivated += OnViewActivated;
 
-            _router = Services.GetRequiredService<DocumentEventRouter>();
+            _router = _services.GetRequiredService<DocumentEventRouter>();
             _router.Subscribe(application.ControlledApplication);
 
             CreateRibbon(application);
@@ -49,8 +49,9 @@ public sealed class RevitTrackingApplication : IExternalApplication
         {
             application.ViewActivated -= OnViewActivated;
             _router?.Dispose();
-            Services?.Dispose();
-            Services = null;
+            CommandHost.ClearServices();
+            _services?.Dispose();
+            _services = null;
             Logger.Info("Add-in stopped.");
         }
         catch (Exception ex)
@@ -64,7 +65,7 @@ public sealed class RevitTrackingApplication : IExternalApplication
     private void OnViewActivated(object? sender, ViewActivatedEventArgs e)
     {
         if (_context is not null && sender is UIApplication uiApp)
-            _context.UiApplication = uiApp;
+            _context.Attach(uiApp);
     }
 
     private static void CreateRibbon(UIControlledApplication application)

@@ -40,16 +40,30 @@ public partial class SnapshotCompareViewModel : ObservableObject
         _editor = editor;
         _logger = logger;
         Project = project;
+    }
 
-        foreach (var info in store.List(project)) // newest first
-            Snapshots.Add(info);
+    // Triggered when the window loads; keeps file I/O off the constructor (and off the UI thread).
+    public async Task InitializeAsync()
+    {
+        try
+        {
+            var infos = await _store.ListAsync(Project);
+            Snapshots.Clear();
+            foreach (var info in infos) // newest first
+                Snapshots.Add(info);
 
-        To = Snapshots.FirstOrDefault(); // newest
-        From = Snapshots.Count > 1 ? Snapshots[^1] : Snapshots.FirstOrDefault(); // oldest
+            To = Snapshots.FirstOrDefault(); // newest
+            From = Snapshots.Count > 1 ? Snapshots[^1] : Snapshots.FirstOrDefault(); // oldest
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, $"Failed to load snapshots for '{Project}'.");
+            Status = "Could not load snapshots.";
+        }
     }
 
     [RelayCommand]
-    private void Compare()
+    private async Task CompareAsync()
     {
         if (From is null || To is null)
         {
@@ -59,8 +73,8 @@ public partial class SnapshotCompareViewModel : ObservableObject
 
         try
         {
-            var from = _store.Load(From);
-            var to = _store.Load(To);
+            var from = await _store.LoadAsync(From);
+            var to = await _store.LoadAsync(To);
             if (from is null || to is null)
             {
                 _logger.Warn(
