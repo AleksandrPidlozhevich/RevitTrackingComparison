@@ -16,6 +16,7 @@ internal sealed class SnapshotExternalEventHandler : IExternalEventHandler
 
     private readonly RevitSnapshotProvider _provider;
     private readonly ISnapshotStore _store;
+    private readonly IPluginLogger _logger;
     private readonly ConcurrentQueue<SnapshotRequest> _queue = new();
 
     private readonly record struct SnapshotRequest(
@@ -27,10 +28,11 @@ internal sealed class SnapshotExternalEventHandler : IExternalEventHandler
     private SnapshotRequest _request;
     private CaptureSession? _session;
 
-    public SnapshotExternalEventHandler(RevitSnapshotProvider provider, ISnapshotStore store)
+    public SnapshotExternalEventHandler(RevitSnapshotProvider provider, ISnapshotStore store, IPluginLogger logger)
     {
         _provider = provider;
         _store = store;
+        _logger = logger;
     }
 
     public void Enqueue(TaskCompletionSource<SnapshotResult> completion, IProgress<SnapshotProgress>? progress) =>
@@ -51,6 +53,7 @@ internal sealed class SnapshotExternalEventHandler : IExternalEventHandler
             var doc = app.ActiveUIDocument?.Document;
             if (doc is null)
             {
+                _logger.Warn("Manual snapshot skipped: no active document.");
                 request.Completion.TrySetResult(SnapshotResult.Fail("No active document."));
                 return;
             }
@@ -58,9 +61,13 @@ internal sealed class SnapshotExternalEventHandler : IExternalEventHandler
             _session = _provider.BeginCapture(doc);
             if (_session is null)
             {
+                _logger.Warn("Manual snapshot failed: capture session could not be started.");
                 request.Completion.TrySetResult(SnapshotResult.Fail("Nothing was captured."));
                 return;
             }
+
+            if (_session.Total == 0)
+                _logger.Warn($"Manual snapshot for '{RevitDocumentKey.Compute(doc)}' matched zero elements.");
 
             request.Progress?.Report(new SnapshotProgress(SnapshotProgressPhase.Capturing, 0, _session.Total));
 
@@ -71,8 +78,8 @@ internal sealed class SnapshotExternalEventHandler : IExternalEventHandler
         catch (Exception ex)
         {
             EndSession();
-            PluginLog.Error(ex, "Failed to start snapshot capture.");
-            request.Completion.TrySetResult(SnapshotResult.Fail(ex.Message));
+            _logger.Error(ex, "Failed to start manual snapshot capture.");
+            request.Completion.TrySetResult(SnapshotResult.Fail("Snapshot capture failed."));
         }
     }
 
@@ -107,8 +114,8 @@ internal sealed class SnapshotExternalEventHandler : IExternalEventHandler
         {
             var completion = _request.Completion;
             EndSession();
-            PluginLog.Error(ex, "Failed during snapshot capture.");
-            completion.TrySetResult(SnapshotResult.Fail(ex.Message));
+            _logger.Error(ex, "Failed during manual snapshot capture.");
+            completion.TrySetResult(SnapshotResult.Fail("Snapshot capture failed."));
         }
     }
 
@@ -131,8 +138,8 @@ internal sealed class SnapshotExternalEventHandler : IExternalEventHandler
         }
         catch (Exception ex)
         {
-            PluginLog.Error(ex, "Failed to persist snapshot.");
-            completion.TrySetResult(SnapshotResult.Fail(ex.Message));
+            _logger.Error(ex, "Failed to persist manual snapshot.");
+            completion.TrySetResult(SnapshotResult.Fail("Could not save snapshot."));
         }
     }
 }

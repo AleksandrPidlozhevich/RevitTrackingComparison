@@ -17,6 +17,7 @@ public partial class CaptureSettingsViewModel : ObservableObject
 
     private readonly ICaptureSettingsStore _store;
     private readonly IModelMetadataProvider _metadata;
+    private readonly IPluginLogger _logger;
 
     public ObservableCollection<CategoryNodeViewModel> Categories { get; } = new();
 
@@ -29,10 +30,14 @@ public partial class CaptureSettingsViewModel : ObservableObject
     [ObservableProperty]
     private bool _isLoading;
 
-    public CaptureSettingsViewModel(ICaptureSettingsStore store, IModelMetadataProvider metadata)
+    public CaptureSettingsViewModel(
+        ICaptureSettingsStore store,
+        IModelMetadataProvider metadata,
+        IPluginLogger logger)
     {
         _store = store;
         _metadata = metadata;
+        _logger = logger;
 
         // Show the saved config immediately; the model catalog is merged in once loaded.
         Build(store.Load(), new Dictionary<string, IReadOnlyList<string>>());
@@ -48,9 +53,11 @@ public partial class CaptureSettingsViewModel : ObservableObject
             var catalog = await _metadata.GetCategoryParametersAsync();
             Build(_store.Load(), catalog);
             Status = $"Loaded {catalog.Count} categories from the model.";
+            _logger.Info($"Capture settings loaded {catalog.Count} categories from the model.");
         }
         catch (Exception ex)
         {
+            _logger.Error(ex, "Failed to load capture settings from the model.");
             Status = $"Error: {ex.Message}";
         }
         finally
@@ -89,8 +96,16 @@ public partial class CaptureSettingsViewModel : ObservableObject
                 .ToList()
         };
 
-        _store.Save(settings);
-        Status = "Saved";
+        try
+        {
+            _store.Save(settings);
+            Status = "Saved";
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "Failed to save capture settings from the UI.");
+            Status = "Error: Could not save settings.";
+        }
     }
 
     private void SetAllCategories(bool included)

@@ -17,13 +17,15 @@ public sealed class DocumentEventRouter : IDisposable
 {
     private readonly RevitSnapshotProvider _provider;
     private readonly ISnapshotStore _store;
+    private readonly IPluginLogger _logger;
 
     private ControlledApplication? _application;
 
-    public DocumentEventRouter(RevitSnapshotProvider provider, ISnapshotStore store)
+    public DocumentEventRouter(RevitSnapshotProvider provider, ISnapshotStore store, IPluginLogger logger)
     {
         _provider = provider;
         _store = store;
+        _logger = logger;
     }
 
     public void Subscribe(ControlledApplication application)
@@ -51,12 +53,23 @@ public sealed class DocumentEventRouter : IDisposable
 
             var project = RevitDocumentKey.Compute(doc);
             if (_store.HasSnapshots(project))
+            {
+                _logger.Info($"Initial snapshot skipped for '{project}': snapshots already exist.");
                 return;
+            }
 
-            // Capture on the API thread (required); persist off-thread so Revit stays responsive.
+            _logger.Info($"Creating initial snapshot for '{project}'…");
             var snapshot = _provider.Capture(doc);
-            if (snapshot is not null)
-                Task.Run(() => Persist(project, snapshot));
+            if (snapshot is null)
+            {
+                _logger.Warn($"Initial snapshot for '{project}' produced no data.");
+                return;
+            }
+
+            if (snapshot.Elements.Count == 0)
+                _logger.Warn($"Initial snapshot for '{project}' captured zero elements.");
+
+            Task.Run(() => Persist(project, snapshot));
         });
     }
 
@@ -65,15 +78,15 @@ public sealed class DocumentEventRouter : IDisposable
         try
         {
             _store.Save(project, snapshot);
-            PluginLog.Info($"Initial snapshot stored for '{project}' ({snapshot.Elements.Count} elements).");
+            _logger.Info($"Initial snapshot stored for '{project}' ({snapshot.Elements.Count} elements).");
         }
         catch (Exception ex)
         {
-            PluginLog.Error(ex, "Failed to store initial snapshot.");
+            _logger.Error(ex, $"Failed to store initial snapshot for '{project}'.");
         }
     }
 
-    private static void Safe(Action action)
+    private void Safe(Action action)
     {
         try
         {
@@ -81,7 +94,7 @@ public sealed class DocumentEventRouter : IDisposable
         }
         catch (Exception ex)
         {
-            PluginLog.Error(ex, "Error while handling document open.");
+            _logger.Error(ex, "Error while handling document open.");
         }
     }
 }

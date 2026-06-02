@@ -10,7 +10,10 @@ namespace RevitTrackingComparison.Revit.Editing;
 // own warnings and rolls back on error). Result is returned via the request's TaskCompletionSource.
 internal sealed class ParameterEditExternalEventHandler : IExternalEventHandler
 {
+    private readonly IPluginLogger _logger;
     private readonly ConcurrentQueue<EditRequest> _queue = new();
+
+    public ParameterEditExternalEventHandler(IPluginLogger logger) => _logger = logger;
 
     private readonly record struct EditRequest(
         string UniqueId,
@@ -33,15 +36,16 @@ internal sealed class ParameterEditExternalEventHandler : IExternalEventHandler
             }
             catch (Exception ex)
             {
-                PluginLog.Error(ex, "Failed to edit parameter.");
-                request.Completion.TrySetResult(ParameterEditResult.Fail(ex.Message));
+                _logger.Error(ex,
+                    $"Failed to edit parameter '{request.ParameterName}' on element '{request.UniqueId}'.");
+                request.Completion.TrySetResult(ParameterEditResult.Fail("Parameter edit failed."));
             }
         }
     }
 
     public string GetName() => "RevitTrackingComparison.EditParameter";
 
-    private static ParameterEditResult Apply(UIApplication app, EditRequest request)
+    private ParameterEditResult Apply(UIApplication app, EditRequest request)
     {
         var doc = app.ActiveUIDocument?.Document;
         if (doc is null)
@@ -64,9 +68,12 @@ internal sealed class ParameterEditExternalEventHandler : IExternalEventHandler
             $"Edit '{request.ParameterName}'",
             _ => applied = TrySet(parameter, request.Value));
 
-        return committed && applied
-            ? ParameterEditResult.Ok()
-            : ParameterEditResult.Fail("Revit rejected the value.");
+        if (committed && applied)
+            return ParameterEditResult.Ok();
+
+        _logger.Warn(
+            $"Revit rejected parameter '{request.ParameterName}' on element '{request.UniqueId}' (value '{request.Value}').");
+        return ParameterEditResult.Fail("Revit rejected the value.");
     }
 
     // Symmetric with the snapshot read: doubles go through SetValueString (display units), others typed.

@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-using RevitTrackingComparison.Revit.Infrastructure;
+using RevitTrackingComparison.Core.Abstractions;
 
 namespace RevitTrackingComparison.Revit.Metadata;
 
@@ -15,7 +15,10 @@ internal sealed class ModelMetadataExternalEventHandler : IExternalEventHandler
     // sample is enough to gather the available names without scanning very large models in full.
     private const int MaxElementsPerCategory = 200;
 
+    private readonly IPluginLogger _logger;
     private readonly ConcurrentQueue<TaskCompletionSource<IReadOnlyDictionary<string, IReadOnlyList<string>>>> _queue = new();
+
+    public ModelMetadataExternalEventHandler(IPluginLogger logger) => _logger = logger;
 
     public void Enqueue(TaskCompletionSource<IReadOnlyDictionary<string, IReadOnlyList<string>>> completion)
         => _queue.Enqueue(completion);
@@ -27,11 +30,18 @@ internal sealed class ModelMetadataExternalEventHandler : IExternalEventHandler
             try
             {
                 var doc = app.ActiveUIDocument?.Document;
-                completion.TrySetResult(doc is null ? Empty() : BuildCatalog(doc));
+                if (doc is null)
+                {
+                    _logger.Warn("Model metadata read skipped: no active document.");
+                    completion.TrySetResult(Empty());
+                    return;
+                }
+
+                completion.TrySetResult(BuildCatalog(doc));
             }
             catch (Exception ex)
             {
-                PluginLog.Error(ex, "Failed to read model metadata.");
+                _logger.Error(ex, "Failed to read model metadata.");
                 completion.TrySetException(ex);
             }
         }

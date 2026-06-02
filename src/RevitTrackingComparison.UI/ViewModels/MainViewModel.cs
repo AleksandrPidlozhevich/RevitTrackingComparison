@@ -11,12 +11,19 @@ namespace RevitTrackingComparison.UI.ViewModels;
 public partial class MainViewModel : ObservableObject
 {
     private readonly ISnapshotCommands _commands;
+    private readonly IPluginLogger _logger;
     private readonly Action _openSettings;
     private readonly Action _openCompare;
 
-    public MainViewModel(ISnapshotCommands commands, string project, Action openSettings, Action openCompare)
+    public MainViewModel(
+        ISnapshotCommands commands,
+        IPluginLogger logger,
+        string project,
+        Action openSettings,
+        Action openCompare)
     {
         _commands = commands;
+        _logger = logger;
         _openSettings = openSettings;
         _openCompare = openCompare;
         Project = project;
@@ -41,9 +48,21 @@ public partial class MainViewModel : ObservableObject
         try
         {
             var result = await _commands.TakeSnapshotAsync(progress);
-            Status = result.Success
-                ? $"Saved: {result.Info?.DisplayName}"
-                : $"Error: {result.Message}";
+            if (result.Success)
+            {
+                _logger.Info($"Manual snapshot completed for '{Project}': {result.Info?.DisplayName}.");
+                Status = $"Saved: {result.Info?.DisplayName}";
+            }
+            else
+            {
+                _logger.Warn($"Manual snapshot failed for '{Project}': {result.Message}");
+                Status = $"Error: {result.Message}";
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, $"Unexpected error during manual snapshot for '{Project}'.");
+            Status = "Error: Snapshot failed.";
         }
         finally
         {

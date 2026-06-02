@@ -9,10 +9,14 @@ namespace RevitTrackingComparison.Revit.Metadata;
 /// </summary>
 public sealed class RevitModelMetadataProvider : IModelMetadataProvider, IDisposable
 {
-    private readonly ModelMetadataExternalEventHandler _handler = new();
+    private readonly ModelMetadataExternalEventHandler _handler;
     private readonly ExternalEvent _externalEvent;
 
-    public RevitModelMetadataProvider() => _externalEvent = ExternalEvent.Create(_handler);
+    public RevitModelMetadataProvider(IPluginLogger logger)
+    {
+        _handler = new ModelMetadataExternalEventHandler(logger);
+        _externalEvent = ExternalEvent.Create(_handler);
+    }
 
     public Task<IReadOnlyDictionary<string, IReadOnlyList<string>>> GetCategoryParametersAsync()
     {

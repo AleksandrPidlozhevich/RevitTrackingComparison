@@ -5,11 +5,12 @@ namespace RevitTrackingComparison.Revit.Editing;
 
 public sealed class RevitModelEditor : IModelEditor, IDisposable
 {
-    private readonly ParameterEditExternalEventHandler _handler = new();
+    private readonly ParameterEditExternalEventHandler _handler;
     private readonly ExternalEvent _externalEvent;
 
-    public RevitModelEditor()
+    public RevitModelEditor(IPluginLogger logger)
     {
+        _handler = new ParameterEditExternalEventHandler(logger);
         _externalEvent = ExternalEvent.Create(_handler);
     }
 

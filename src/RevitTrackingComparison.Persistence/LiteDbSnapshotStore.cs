@@ -20,11 +20,13 @@ public sealed class LiteDbSnapshotStore : ISnapshotStore
 
     private readonly ILiteDbConnectionFactory _connectionFactory;
     private readonly LiteDbOptions _options;
+    private readonly IPluginLogger _logger;
 
-    public LiteDbSnapshotStore(ILiteDbConnectionFactory connectionFactory, LiteDbOptions options)
+    public LiteDbSnapshotStore(ILiteDbConnectionFactory connectionFactory, LiteDbOptions options, IPluginLogger logger)
     {
         _connectionFactory = connectionFactory;
         _options = options;
+        _logger = logger;
     }
 
     public bool HasSnapshots(string project)
@@ -42,9 +44,19 @@ public sealed class LiteDbSnapshotStore : ISnapshotStore
         var fileName = UniqueFileName(folder, safeProject, snapshot.CapturedAt);
         var path = Path.Combine(folder, fileName);
 
-        using (var db = _connectionFactory.Open(path))
-            db.GetCollection<SnapshotEntity>(Snapshots).Insert(snapshot.ToEntity());
+        try
+        {
+            using (var db = _connectionFactory.Open(path))
+                db.GetCollection<SnapshotEntity>(Snapshots).Insert(snapshot.ToEntity());
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, $"Failed to save snapshot '{path}' for project '{project}'.");
+            throw;
+        }
 
+        _logger.Info(
+            $"Snapshot saved for '{project}': '{fileName}' ({snapshot.Elements.Count} elements).");
         return new SnapshotInfo { Project = project, FileName = fileName, CapturedAt = snapshot.CapturedAt };
     }
 
@@ -69,10 +81,28 @@ public sealed class LiteDbSnapshotStore : ISnapshotStore
     {
         var path = Path.Combine(ProjectFolder(Sanitize(info.Project)), info.FileName);
         if (!File.Exists(path))
+        {
+            _logger.Warn($"Snapshot file not found: '{path}'.");
             return null;
+        }
 
-        using var db = _connectionFactory.Open(path);
-        return db.GetCollection<SnapshotEntity>(Snapshots).Query().FirstOrDefault()?.ToDomain();
+        try
+        {
+            using var db = _connectionFactory.Open(path);
+            var entity = db.GetCollection<SnapshotEntity>(Snapshots).Query().FirstOrDefault();
+            if (entity is null)
+            {
+                _logger.Warn($"Snapshot database is empty: '{path}'.");
+                return null;
+            }
+
+            return entity.ToDomain();
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, $"Failed to load snapshot '{path}'.");
+            throw;
+        }
     }
 
     private string ProjectFolder(string safeProject) => Path.Combine(_options.SnapshotsFolder, safeProject);

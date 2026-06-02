@@ -1,6 +1,7 @@
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.UI;
 using Microsoft.Extensions.DependencyInjection;
+using RevitTrackingComparison.Core.Abstractions;
 using RevitTrackingComparison.Revit.Application;
 using RevitTrackingComparison.Revit.Infrastructure;
 using RevitTrackingComparison.UI.Services;
@@ -35,13 +36,15 @@ public sealed class ShowSnapshotHubCommand : IExternalCommand
             }
 
             var project = RevitDocumentKey.Compute(doc);
+            var logger = services.GetRequiredService<IPluginLogger>();
+            logger.Info($"Opening snapshot hub for project '{project}'.");
             services.GetRequiredService<ISnapshotHubView>().Show(project);
             return Result.Succeeded;
         }
         catch (Exception ex)
         {
-            PluginLog.Error(ex, "Failed to open the snapshot hub.");
-            message = ex.Message;
+            services.GetRequiredService<IPluginLogger>().Error(ex, "Failed to open the snapshot hub.");
+            message = "Could not open the snapshot hub.";
             return Result.Failed;
         }
     }

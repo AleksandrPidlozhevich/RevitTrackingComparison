@@ -10,6 +10,19 @@
         <converters:NullToVisibilityConverter x:Key="NullToVisibility" />
         <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
 
+        <!-- Right-click copy for the element tables (the ContextMenu inherits the row's view-model). -->
+        <Style x:Key="ElementRow" TargetType="DataGridRow" BasedOn="{StaticResource MaterialDesignDataGridRow}">
+            <Setter Property="ContextMenu">
+                <Setter.Value>
+                    <ContextMenu>
+                        <MenuItem Header="Copy ID" Command="{Binding CopyIdCommand}" />
+                        <MenuItem Header="Copy UniqueId" Command="{Binding CopyUniqueIdCommand}" />
+                        <MenuItem Header="Copy name" Command="{Binding CopyNameCommand}" />
+                    </ContextMenu>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <!-- Editable value cell: shows the value + pencil; toggles to a textbox + save/cancel + status. -->
         <DataTemplate x:Key="EditableValueCell">
             <Grid VerticalAlignment="Center">
@@ -74,6 +87,7 @@
     <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
@@ -90,7 +104,13 @@
                        Foreground="{StaticResource ModifiedAccentBrush}" />
         </StackPanel>
 
-        <TabControl Grid.Row="1">
+        <TextBox Grid.Row="1" Margin="0,0,0,12"
+                 Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                 Style="{StaticResource MaterialDesignFilledTextBox}"
+                 materialDesign:HintAssist.Hint="Search by category, name, ID or UniqueId"
+                 materialDesign:TextFieldAssist.HasClearButton="True" />
+
+        <TabControl Grid.Row="2">
             <TabItem Header="Added" Style="{StaticResource ComparisonTabAdded}">
                 <Grid>
                     <Grid.RowDefinitions>
@@ -100,13 +120,14 @@
                     </Grid.RowDefinitions>
 
                     <DataGrid Grid.Row="0" Style="{StaticResource FlatDataGrid}"
-                              ItemsSource="{Binding Added}" SelectedItem="{Binding SelectedAdded}"
+                              ItemsSource="{Binding AddedView}" SelectedItem="{Binding SelectedAdded}"
+                              RowStyle="{StaticResource ElementRow}"
                               materialDesign:DataGridAssist.CellPadding="12 8 8 8">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Category" Binding="{Binding After.Category}" Width="Auto" MinWidth="100" />
-                            <DataGridTextColumn Header="ID" Binding="{Binding After.ElementId}" Width="Auto" />
+                            <DataGridTextColumn Header="Category" Binding="{Binding Category}" Width="Auto" MinWidth="100" />
+                            <DataGridTextColumn Header="ID" Binding="{Binding ElementId}" Width="Auto" />
                             <DataGridTextColumn Header="UniqueId" Binding="{Binding UniqueId}" Width="Auto" />
-                            <DataGridTextColumn Header="Name" Binding="{Binding After.Name}" Width="*" MinWidth="160" />
+                            <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*" MinWidth="160" />
                         </DataGrid.Columns>
                     </DataGrid>
 
@@ -128,13 +149,14 @@
                 </Grid>
             </TabItem>
             <TabItem Header="Removed" Style="{StaticResource ComparisonTabRemoved}">
-                <DataGrid Style="{StaticResource FlatDataGrid}" ItemsSource="{Binding Removed}"
+                <DataGrid Style="{StaticResource FlatDataGrid}" ItemsSource="{Binding RemovedView}"
+                          RowStyle="{StaticResource ElementRow}"
                           materialDesign:DataGridAssist.CellPadding="12 8 8 8">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="Category" Binding="{Binding Before.Category}" Width="Auto" MinWidth="100" />
-                        <DataGridTextColumn Header="ID" Binding="{Binding Before.ElementId}" Width="Auto" />
+                        <DataGridTextColumn Header="Category" Binding="{Binding Category}" Width="Auto" MinWidth="100" />
+                        <DataGridTextColumn Header="ID" Binding="{Binding ElementId}" Width="Auto" />
                         <DataGridTextColumn Header="UniqueId" Binding="{Binding UniqueId}" Width="Auto" />
-                        <DataGridTextColumn Header="Name" Binding="{Binding Before.Name}" Width="*" MinWidth="160" />
+                        <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*" MinWidth="160" />
                     </DataGrid.Columns>
                 </DataGrid>
             </TabItem>
@@ -147,14 +169,15 @@
                     </Grid.RowDefinitions>
 
                     <DataGrid Grid.Row="0" Style="{StaticResource FlatDataGrid}"
-                              ItemsSource="{Binding Modified}" SelectedItem="{Binding SelectedModified}"
+                              ItemsSource="{Binding ModifiedView}" SelectedItem="{Binding SelectedModified}"
+                              RowStyle="{StaticResource ElementRow}"
                               materialDesign:DataGridAssist.CellPadding="12 8 8 8">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Category" Binding="{Binding After.Category}" Width="Auto" MinWidth="100" />
-                            <DataGridTextColumn Header="ID" Binding="{Binding After.ElementId}" Width="Auto" />
+                            <DataGridTextColumn Header="Category" Binding="{Binding Category}" Width="Auto" MinWidth="100" />
+                            <DataGridTextColumn Header="ID" Binding="{Binding ElementId}" Width="Auto" />
                             <DataGridTextColumn Header="UniqueId" Binding="{Binding UniqueId}" Width="Auto" />
-                            <DataGridTextColumn Header="Name" Binding="{Binding After.Name}" Width="*" MinWidth="160" />
-                            <DataGridTextColumn Header="Changes" Binding="{Binding ChangedParameters.Count}" Width="Auto" />
+                            <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*" MinWidth="160" />
+                            <DataGridTextColumn Header="Changes" Binding="{Binding Changes}" Width="Auto" />
                         </DataGrid.Columns>
                     </DataGrid>
 

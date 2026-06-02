@@ -40,7 +40,8 @@ public sealed class FailureSuppressor : IFailuresPreprocessor
             .ToList();
 
         var where = elements.Count == 0 ? string.Empty : $" [{string.Join(", ", elements)}]";
-        PluginLog.Warn($"Suppressed Revit {kind}: {message.GetDescriptionText()}{where}");
+        var prefix = kind == "ERROR" ? "Revit transaction error" : "Suppressed Revit warning";
+        PluginLog.Warn($"{prefix}: {message.GetDescriptionText()}{where}");
     }
 
     private static string Describe(Document document, ElementId id)

@@ -16,6 +16,7 @@ public sealed class SnapshotHubView : ISnapshotHubView
     private readonly ICaptureSettingsStore _settingsStore;
     private readonly IModelMetadataProvider _metadata;
     private readonly IModelEditor _editor;
+    private readonly IPluginLogger _logger;
 
     public SnapshotHubView(
         ISnapshotCommands commands,
@@ -23,7 +24,8 @@ public sealed class SnapshotHubView : ISnapshotHubView
         ISnapshotComparer comparer,
         ICaptureSettingsStore settingsStore,
         IModelMetadataProvider metadata,
-        IModelEditor editor)
+        IModelEditor editor,
+        IPluginLogger logger)
     {
         _commands = commands;
         _store = store;
@@ -31,23 +33,24 @@ public sealed class SnapshotHubView : ISnapshotHubView
         _settingsStore = settingsStore;
         _metadata = metadata;
         _editor = editor;
+        _logger = logger;
     }
 
     public void Show(string project)
     {
-        var viewModel = new MainViewModel(_commands, project, OpenSettings, () => OpenCompare(project));
+        var viewModel = new MainViewModel(_commands, _logger, project, OpenSettings, () => OpenCompare(project));
         new MainWindow(viewModel).Show();
     }
 
     private void OpenSettings()
     {
-        var viewModel = new CaptureSettingsViewModel(_settingsStore, _metadata);
+        var viewModel = new CaptureSettingsViewModel(_settingsStore, _metadata, _logger);
         new CaptureSettingsWindow(viewModel).Show();
     }
 
     private void OpenCompare(string project)
     {
-        var viewModel = new SnapshotCompareViewModel(_store, _comparer, _editor, project);
+        var viewModel = new SnapshotCompareViewModel(_store, _comparer, _editor, _logger, project);
         new SnapshotCompareWindow(viewModel).Show();
     }
 }

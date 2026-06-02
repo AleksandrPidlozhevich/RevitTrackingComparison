@@ -16,6 +16,7 @@ public partial class SnapshotCompareViewModel : ObservableObject
     private readonly ISnapshotStore _store;
     private readonly ISnapshotComparer _comparer;
     private readonly IModelEditor _editor;
+    private readonly IPluginLogger _logger;
 
     public ObservableCollection<SnapshotInfo> Snapshots { get; } = new();
 
@@ -28,11 +29,20 @@ public partial class SnapshotCompareViewModel : ObservableObject
     [ObservableProperty]
     private string _status = string.Empty;
 
-    public SnapshotCompareViewModel(ISnapshotStore store, ISnapshotComparer comparer, IModelEditor editor, string project)
+    public string Project { get; }
+
+    public SnapshotCompareViewModel(
+        ISnapshotStore store,
+        ISnapshotComparer comparer,
+        IModelEditor editor,
+        IPluginLogger logger,
+        string project)
     {
         _store = store;
         _comparer = comparer;
         _editor = editor;
+        _logger = logger;
+        Project = project;
 
         foreach (var info in store.List(project)) // newest first
             Snapshots.Add(info);
@@ -50,18 +60,32 @@ public partial class SnapshotCompareViewModel : ObservableObject
             return;
         }
 
-        var from = _store.Load(From);
-        var to = _store.Load(To);
-        if (from is null || to is null)
+        try
         {
-            Status = "Could not load the snapshots.";
-            return;
-        }
+            var from = _store.Load(From);
+            var to = _store.Load(To);
+            if (from is null || to is null)
+            {
+                _logger.Warn(
+                    $"Compare failed for '{Project}': could not load '{From.FileName}' or '{To.FileName}'.");
+                Status = "Could not load the snapshots.";
+                return;
+            }
 
-        var diff = _comparer.Compare(from, to);
-        var viewModel = new ComparisonViewModel(_editor);
-        viewModel.Load(diff);
-        new ComparisonWindow(viewModel).Show();
-        Status = string.Empty;
+            var diff = _comparer.Compare(from, to);
+            _logger.Info(
+                $"Compared snapshots for '{Project}': '{From.FileName}' -> '{To.FileName}' " +
+                $"(+{diff.Added.Count} -{diff.Removed.Count} ~{diff.Modified.Count}).");
+            var viewModel = new ComparisonViewModel(_editor);
+            viewModel.Load(diff);
+            new ComparisonWindow(viewModel).Show();
+            Status = string.Empty;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex,
+                $"Compare failed for '{Project}' ('{From.FileName}' -> '{To.FileName}').");
+            Status = "Compare failed.";
+        }
     }
 }

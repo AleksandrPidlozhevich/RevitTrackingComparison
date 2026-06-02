@@ -19,9 +19,12 @@ public static class PluginLog
         Logger.Warn(message);
     }
 
-    public static void Error(Exception ex, string message)
+    public static void Error(Exception? ex, string message)
     {
-        Logger.Error(ex, message);
+        if (ex is null)
+            Logger.Error(message);
+        else
+            Logger.Error(ex, message);
     }
 
     private static Logger Configure()
@@ -48,10 +51,38 @@ public static class PluginLog
             config.AddRule(LogLevel.Info, LogLevel.Fatal, fileTarget);
             LogManager.Configuration = config;
         }
-        catch
+        catch (Exception ex)
         {
+            System.Diagnostics.Debug.WriteLine($"RevitTrackingComparison: failed to configure file logging: {ex.Message}");
+            TryConfigureFallbackTarget();
         }
 
         return LogManager.GetCurrentClassLogger();
+    }
+
+    private static void TryConfigureFallbackTarget()
+    {
+        try
+        {
+            var fallbackPath = Path.Combine(Path.GetTempPath(), "RevitTrackingComparison.log");
+            var fileTarget = new FileTarget("fallback")
+            {
+                FileName = fallbackPath,
+                Layout = "${longdate} [${level:uppercase=true}] ${message}"
+                         + "${onexception:${newline}${exception:format=tostring}}",
+                KeepFileOpen = false,
+                Encoding = System.Text.Encoding.UTF8
+            };
+
+            var config = new LoggingConfiguration();
+            config.AddTarget(fileTarget);
+            config.AddRule(LogLevel.Info, LogLevel.Fatal, fileTarget);
+            LogManager.Configuration = config;
+            System.Diagnostics.Debug.WriteLine($"RevitTrackingComparison: logging to fallback file '{fallbackPath}'.");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"RevitTrackingComparison: fallback logging failed: {ex.Message}");
+        }
     }
 }

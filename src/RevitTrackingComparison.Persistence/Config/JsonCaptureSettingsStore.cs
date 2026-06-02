@@ -13,10 +13,12 @@ public sealed class JsonCaptureSettingsStore : ICaptureSettingsStore
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
 
     private readonly LiteDbOptions _options;
+    private readonly IPluginLogger _logger;
 
-    public JsonCaptureSettingsStore(LiteDbOptions options)
+    public JsonCaptureSettingsStore(LiteDbOptions options, IPluginLogger logger)
     {
         _options = options;
+        _logger = logger;
     }
 
     public CaptureSettings Load()
@@ -24,6 +26,7 @@ public sealed class JsonCaptureSettingsStore : ICaptureSettingsStore
         var path = _options.CaptureConfigPath;
         if (!File.Exists(path))
         {
+            _logger.Info($"Capture config not found at '{path}'; creating defaults.");
             var defaults = Default();
             Save(defaults);
             return defaults;
@@ -32,18 +35,35 @@ public sealed class JsonCaptureSettingsStore : ICaptureSettingsStore
         try
         {
             var dto = JsonSerializer.Deserialize<SettingsDto>(File.ReadAllText(path));
-            return dto?.ToDomain() ?? Default();
+            if (dto is null)
+            {
+                _logger.Warn($"Capture config at '{path}' deserialized to null; using defaults.");
+                return Default();
+            }
+
+            return dto.ToDomain();
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.Error(ex, $"Failed to read capture config from '{path}'; using defaults.");
             return Default();
         }
     }
 
     public void Save(CaptureSettings settings)
     {
-        Directory.CreateDirectory(_options.RootFolder);
-        File.WriteAllText(_options.CaptureConfigPath, JsonSerializer.Serialize(SettingsDto.FromDomain(settings), JsonOptions));
+        var path = _options.CaptureConfigPath;
+        try
+        {
+            Directory.CreateDirectory(_options.RootFolder);
+            File.WriteAllText(path, JsonSerializer.Serialize(SettingsDto.FromDomain(settings), JsonOptions));
+            _logger.Info($"Capture config saved to '{path}' ({settings.Rules.Count} rules).");
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, $"Failed to save capture config to '{path}'.");
+            throw;
+        }
     }
 
     private static CaptureSettings Default() => new()
