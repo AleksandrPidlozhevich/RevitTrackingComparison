@@ -1,9 +1,12 @@
 using Autodesk.Revit.DB;
+using RevitTrackingComparison.Core.Abstractions;
 
 namespace RevitTrackingComparison.Revit.Infrastructure;
 
 public static class RevitTransaction
 {
+    private static readonly IPluginLogger Logger = PluginLog.For(nameof(RevitTransaction));
+
     public static bool Run(Document document, string name, Action<Document> edit)
     {
         using var transaction = new Transaction(document, name);
@@ -20,7 +23,7 @@ public static class RevitTransaction
         }
         catch (Exception ex)
         {
-            PluginLog.Error(ex, $"Transaction '{name}' failed; rolling back.");
+            Logger.Error(ex, $"Transaction '{name}' failed; rolling back.");
             transaction.RollBack();
             return false;
         }

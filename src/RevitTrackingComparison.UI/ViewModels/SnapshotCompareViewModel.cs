@@ -32,7 +32,7 @@ public partial class SnapshotCompareViewModel : ObservableObject
         ISnapshotStore store,
         ISnapshotComparer comparer,
         IModelEditor editor,
-        IPluginLogger logger,
+        IPluginLogger<SnapshotCompareViewModel> logger,
         string project)
     {
         _store = store;

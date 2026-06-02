@@ -15,7 +15,7 @@ public sealed class JsonCaptureSettingsStore : ICaptureSettingsStore
     private readonly LiteDbOptions _options;
     private readonly IPluginLogger _logger;
 
-    public JsonCaptureSettingsStore(LiteDbOptions options, IPluginLogger logger)
+    public JsonCaptureSettingsStore(LiteDbOptions options, IPluginLogger<JsonCaptureSettingsStore> logger)
     {
         _options = options;
         _logger = logger;

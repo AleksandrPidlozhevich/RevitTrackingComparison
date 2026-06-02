@@ -10,10 +10,10 @@ namespace RevitTrackingComparison.Revit.Editing;
 // own warnings and rolls back on error). Result is returned via the request's TaskCompletionSource.
 internal sealed class ParameterEditExternalEventHandler : IExternalEventHandler
 {
-    private readonly IPluginLogger _logger;
+    private readonly IPluginLogger<ParameterEditExternalEventHandler> _logger;
     private readonly ConcurrentQueue<EditRequest> _queue = new();
 
-    public ParameterEditExternalEventHandler(IPluginLogger logger)
+    public ParameterEditExternalEventHandler(IPluginLogger<ParameterEditExternalEventHandler> logger)
     {
         _logger = logger;
     }

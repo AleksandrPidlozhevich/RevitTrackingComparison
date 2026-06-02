@@ -30,7 +30,7 @@ public partial class CaptureSettingsViewModel : ObservableObject
     public CaptureSettingsViewModel(
         ICaptureSettingsStore store,
         IModelMetadataProvider metadata,
-        IPluginLogger logger)
+        IPluginLogger<CaptureSettingsViewModel> logger)
     {
         _store = store;
         _metadata = metadata;

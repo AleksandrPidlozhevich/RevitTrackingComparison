@@ -8,9 +8,10 @@ public sealed class RevitModelEditor : IModelEditor, IDisposable
     private readonly ParameterEditExternalEventHandler _handler;
     private readonly ExternalEvent _externalEvent;
 
-    public RevitModelEditor(IPluginLogger logger)
+    public RevitModelEditor(IPluginLoggerFactory loggerFactory)
     {
-        _handler = new ParameterEditExternalEventHandler(logger);
+        _handler = new ParameterEditExternalEventHandler(
+            loggerFactory.CreateLogger<ParameterEditExternalEventHandler>());
         _externalEvent = ExternalEvent.Create(_handler);
     }
 

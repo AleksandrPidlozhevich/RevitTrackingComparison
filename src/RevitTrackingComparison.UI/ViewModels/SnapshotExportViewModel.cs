@@ -25,7 +25,7 @@ public partial class SnapshotExportViewModel : ObservableObject
 
     public string Project { get; }
 
-    public SnapshotExportViewModel(ISnapshotStore store, IPluginLogger logger, string project)
+    public SnapshotExportViewModel(ISnapshotStore store, IPluginLogger<SnapshotExportViewModel> logger, string project)
     {
         _store = store;
         _logger = logger;

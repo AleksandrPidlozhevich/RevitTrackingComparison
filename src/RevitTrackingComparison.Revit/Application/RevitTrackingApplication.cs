@@ -2,6 +2,7 @@ using System.Reflection;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Events;
 using Microsoft.Extensions.DependencyInjection;
+using RevitTrackingComparison.Core.Abstractions;
 using RevitTrackingComparison.Revit.Events;
 using RevitTrackingComparison.Revit.Infrastructure;
 
@@ -10,6 +11,8 @@ namespace RevitTrackingComparison.Revit.Application;
 public sealed class RevitTrackingApplication : IExternalApplication
 {
     private const string RibbonPanel = "Snapshot tracking";
+
+    private static readonly IPluginLogger Logger = PluginLog.For(nameof(RevitTrackingApplication));
 
     public static ServiceProvider? Services { get; private set; }
 
@@ -30,12 +33,12 @@ public sealed class RevitTrackingApplication : IExternalApplication
 
             CreateRibbon(application);
 
-            PluginLog.Info("Add-in started.");
+            Logger.Info("Add-in started.");
             return Result.Succeeded;
         }
         catch (Exception ex)
         {
-            PluginLog.Error(ex, "Failed to start add-in.");
+            Logger.Error(ex, "Failed to start add-in.");
             return Result.Failed;
         }
     }
@@ -48,11 +51,11 @@ public sealed class RevitTrackingApplication : IExternalApplication
             _router?.Dispose();
             Services?.Dispose();
             Services = null;
-            PluginLog.Info("Add-in stopped.");
+            Logger.Info("Add-in stopped.");
         }
         catch (Exception ex)
         {
-            PluginLog.Error(ex, "Failed to stop add-in.");
+            Logger.Error(ex, "Failed to stop add-in.");
         }
 
         return Result.Succeeded;
@@ -84,6 +87,6 @@ public sealed class RevitTrackingApplication : IExternalApplication
         if (panel.AddItem(hubButton) is PushButton pushButton)
             RibbonIconLoader.ApplyTo(pushButton);
 
-        PluginLog.Info($"Ribbon panel '{RibbonPanel}' registered on Add-Ins tab.");
+        Logger.Info($"Ribbon panel '{RibbonPanel}' registered on Add-Ins tab.");
     }
 }

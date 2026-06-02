@@ -36,14 +36,15 @@ public sealed class ShowSnapshotHubCommand : IExternalCommand
             }
 
             var project = RevitDocumentKey.Compute(doc);
-            var logger = services.GetRequiredService<IPluginLogger>();
+            var logger = services.GetRequiredService<IPluginLogger<ShowSnapshotHubCommand>>();
             logger.Info($"Opening snapshot hub for project '{project}'.");
             services.GetRequiredService<ISnapshotHubView>().Show(project);
             return Result.Succeeded;
         }
         catch (Exception ex)
         {
-            services.GetRequiredService<IPluginLogger>().Error(ex, "Failed to open the snapshot hub.");
+            services.GetRequiredService<IPluginLogger<ShowSnapshotHubCommand>>()
+                .Error(ex, "Failed to open the snapshot hub.");
             message = "Could not open the snapshot hub.";
             return Result.Failed;
         }

@@ -12,9 +12,10 @@ public sealed class RevitModelMetadataProvider : IModelMetadataProvider, IDispos
     private readonly ModelMetadataExternalEventHandler _handler;
     private readonly ExternalEvent _externalEvent;
 
-    public RevitModelMetadataProvider(IPluginLogger logger)
+    public RevitModelMetadataProvider(IPluginLoggerFactory loggerFactory)
     {
-        _handler = new ModelMetadataExternalEventHandler(logger);
+        _handler = new ModelMetadataExternalEventHandler(
+            loggerFactory.CreateLogger<ModelMetadataExternalEventHandler>());
         _externalEvent = ExternalEvent.Create(_handler);
     }
 

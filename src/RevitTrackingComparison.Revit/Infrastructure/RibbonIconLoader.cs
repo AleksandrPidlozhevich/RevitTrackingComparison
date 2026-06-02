@@ -2,6 +2,7 @@ using Autodesk.Revit.UI;
 using System.Reflection;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using RevitTrackingComparison.Core.Abstractions;
 
 namespace RevitTrackingComparison.Revit.Infrastructure;
 
@@ -13,6 +14,8 @@ internal static class RibbonIconLoader
 {
     private const string EmbeddedResourceName = "RevitTrackingComparison.Revit.Resources.ab-testing.png";
     private const double TargetDpi = 96d;
+
+    private static readonly IPluginLogger Logger = PluginLog.For(nameof(RibbonIconLoader));
 
     public static void ApplyTo(PushButton button)
     {
@@ -32,7 +35,7 @@ internal static class RibbonIconLoader
             using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(EmbeddedResourceName);
             if (stream is null)
             {
-                PluginLog.Warn($"Embedded ribbon icon '{EmbeddedResourceName}' was not found.");
+                Logger.Warn($"Embedded ribbon icon '{EmbeddedResourceName}' was not found.");
                 return null;
             }
 
@@ -47,7 +50,7 @@ internal static class RibbonIconLoader
         }
         catch (Exception ex)
         {
-            PluginLog.Error(ex, "Failed to load embedded ribbon icon.");
+            Logger.Error(ex, "Failed to load embedded ribbon icon.");
             return null;
         }
     }

@@ -17,11 +17,14 @@ public sealed class DocumentEventRouter : IDisposable
 {
     private readonly RevitSnapshotProvider _provider;
     private readonly ISnapshotStore _store;
-    private readonly IPluginLogger _logger;
+    private readonly IPluginLogger<DocumentEventRouter> _logger;
 
     private ControlledApplication? _application;
 
-    public DocumentEventRouter(RevitSnapshotProvider provider, ISnapshotStore store, IPluginLogger logger)
+    public DocumentEventRouter(
+        RevitSnapshotProvider provider,
+        ISnapshotStore store,
+        IPluginLogger<DocumentEventRouter> logger)
     {
         _provider = provider;
         _store = store;

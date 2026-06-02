@@ -15,12 +15,12 @@ internal sealed class ModelMetadataExternalEventHandler : IExternalEventHandler
     // sample is enough to gather the available names without scanning very large models in full.
     private const int MaxElementsPerCategory = 200;
 
-    private readonly IPluginLogger _logger;
+    private readonly IPluginLogger<ModelMetadataExternalEventHandler> _logger;
 
     private readonly ConcurrentQueue<TaskCompletionSource<IReadOnlyDictionary<string, IReadOnlyList<string>>>> _queue =
         new();
 
-    public ModelMetadataExternalEventHandler(IPluginLogger logger)
+    public ModelMetadataExternalEventHandler(IPluginLogger<ModelMetadataExternalEventHandler> logger)
     {
         _logger = logger;
     }

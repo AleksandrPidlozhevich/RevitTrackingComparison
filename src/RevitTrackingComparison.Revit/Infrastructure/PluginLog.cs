@@ -1,34 +1,46 @@
 using System.IO;
+using System.Threading;
 using NLog;
 using NLog.Config;
 using NLog.Targets;
+using RevitTrackingComparison.Core.Abstractions;
 
 namespace RevitTrackingComparison.Revit.Infrastructure;
 
+// Owns NLog configuration (one file per day under %AppData%\TrackingComparison\log) and hands out
+// named loggers. Application code injects IPluginLogger<T>; static infrastructure that cannot use DI
+// calls PluginLog.For(category). Configuration is idempotent and self-healing: any entry point
+// triggers it, so loggers obtained before Initialize() still write to the file target.
 public static class PluginLog
 {
-    private static readonly Logger Logger = Configure();
+    private const string Layout =
+        "${longdate} [${level:uppercase=true}] ${logger:shortName=true} - ${message}"
+        + "${onexception:${newline}${exception:format=tostring}}";
 
-    public static void Info(string message)
+    private static int _configured;
+
+    public static void Initialize()
     {
-        Logger.Info(message);
+        EnsureConfigured();
     }
 
-    public static void Warn(string message)
+    public static IPluginLogger For(string category)
     {
-        Logger.Warn(message);
+        EnsureConfigured();
+        return new NLogPluginLogger(LogManager.GetLogger(category));
     }
 
-    public static void Error(Exception? ex, string message)
+    internal static Logger LoggerFor(Type type)
     {
-        if (ex is null)
-            Logger.Error(message);
-        else
-            Logger.Error(ex, message);
+        EnsureConfigured();
+        return LogManager.GetLogger(type.FullName ?? type.Name);
     }
 
-    private static Logger Configure()
+    private static void EnsureConfigured()
     {
+        if (Interlocked.Exchange(ref _configured, 1) == 1)
+            return;
+
         try
         {
             // %AppData%\TrackingComparison\log — same data root as snapshots and capture config.
@@ -37,19 +49,10 @@ public static class PluginLog
                 "TrackingComparison",
                 "log");
 
-            var fileTarget = new FileTarget("file")
+            Apply(new FileTarget("file")
             {
-                FileName = Path.Combine(logDirectory, "revit-tracking-${shortdate}.log"),
-                Layout = "${longdate} [${level:uppercase=true}] ${message}"
-                         + "${onexception:${newline}${exception:format=tostring}}",
-                KeepFileOpen = false,
-                Encoding = System.Text.Encoding.UTF8
-            };
-
-            var config = new LoggingConfiguration();
-            config.AddTarget(fileTarget);
-            config.AddRule(LogLevel.Info, LogLevel.Fatal, fileTarget);
-            LogManager.Configuration = config;
+                FileName = Path.Combine(logDirectory, "revit-tracking-${shortdate}.log")
+            });
         }
         catch (Exception ex)
         {
@@ -57,8 +60,6 @@ public static class PluginLog
                 $"RevitTrackingComparison: failed to configure file logging: {ex.Message}");
             TryConfigureFallbackTarget();
         }
-
-        return LogManager.GetCurrentClassLogger();
     }
 
     private static void TryConfigureFallbackTarget()
@@ -66,24 +67,24 @@ public static class PluginLog
         try
         {
             var fallbackPath = Path.Combine(Path.GetTempPath(), "RevitTrackingComparison.log");
-            var fileTarget = new FileTarget("fallback")
-            {
-                FileName = fallbackPath,
-                Layout = "${longdate} [${level:uppercase=true}] ${message}"
-                         + "${onexception:${newline}${exception:format=tostring}}",
-                KeepFileOpen = false,
-                Encoding = System.Text.Encoding.UTF8
-            };
-
-            var config = new LoggingConfiguration();
-            config.AddTarget(fileTarget);
-            config.AddRule(LogLevel.Info, LogLevel.Fatal, fileTarget);
-            LogManager.Configuration = config;
+            Apply(new FileTarget("fallback") { FileName = fallbackPath });
             System.Diagnostics.Debug.WriteLine($"RevitTrackingComparison: logging to fallback file '{fallbackPath}'.");
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"RevitTrackingComparison: fallback logging failed: {ex.Message}");
         }
+    }
+
+    private static void Apply(FileTarget target)
+    {
+        target.Layout = Layout;
+        target.KeepFileOpen = false;
+        target.Encoding = System.Text.Encoding.UTF8;
+
+        var config = new LoggingConfiguration();
+        config.AddTarget(target);
+        config.AddRule(LogLevel.Info, LogLevel.Fatal, target);
+        LogManager.Configuration = config;
     }
 }

@@ -22,7 +22,10 @@ public sealed class LiteDbSnapshotStore : ISnapshotStore
     private readonly LiteDbOptions _options;
     private readonly IPluginLogger _logger;
 
-    public LiteDbSnapshotStore(ILiteDbConnectionFactory connectionFactory, LiteDbOptions options, IPluginLogger logger)
+    public LiteDbSnapshotStore(
+        ILiteDbConnectionFactory connectionFactory,
+        LiteDbOptions options,
+        IPluginLogger<LiteDbSnapshotStore> logger)
     {
         _connectionFactory = connectionFactory;
         _options = options;

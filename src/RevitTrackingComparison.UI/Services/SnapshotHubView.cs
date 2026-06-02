@@ -16,7 +16,7 @@ public sealed class SnapshotHubView : ISnapshotHubView
     private readonly ICaptureSettingsStore _settingsStore;
     private readonly IModelMetadataProvider _metadata;
     private readonly IModelEditor _editor;
-    private readonly IPluginLogger _logger;
+    private readonly IPluginLoggerFactory _loggerFactory;
 
     public SnapshotHubView(
         ISnapshotCommands commands,
@@ -25,7 +25,7 @@ public sealed class SnapshotHubView : ISnapshotHubView
         ICaptureSettingsStore settingsStore,
         IModelMetadataProvider metadata,
         IModelEditor editor,
-        IPluginLogger logger)
+        IPluginLoggerFactory loggerFactory)
     {
         _commands = commands;
         _store = store;
@@ -33,14 +33,14 @@ public sealed class SnapshotHubView : ISnapshotHubView
         _settingsStore = settingsStore;
         _metadata = metadata;
         _editor = editor;
-        _logger = logger;
+        _loggerFactory = loggerFactory;
     }
 
     public void Show(string project)
     {
         var viewModel = new MainViewModel(
             _commands,
-            _logger,
+            _loggerFactory.CreateLogger<MainViewModel>(),
             project,
             OpenSettings,
             () => OpenCompare(project),
@@ -50,19 +50,22 @@ public sealed class SnapshotHubView : ISnapshotHubView
 
     private void OpenSettings()
     {
-        var viewModel = new CaptureSettingsViewModel(_settingsStore, _metadata, _logger);
+        var viewModel = new CaptureSettingsViewModel(
+            _settingsStore, _metadata, _loggerFactory.CreateLogger<CaptureSettingsViewModel>());
         new CaptureSettingsWindow(viewModel).Show();
     }
 
     private void OpenCompare(string project)
     {
-        var viewModel = new SnapshotCompareViewModel(_store, _comparer, _editor, _logger, project);
+        var viewModel = new SnapshotCompareViewModel(
+            _store, _comparer, _editor, _loggerFactory.CreateLogger<SnapshotCompareViewModel>(), project);
         new SnapshotCompareWindow(viewModel).Show();
     }
 
     private void OpenExport(string project)
     {
-        var viewModel = new SnapshotExportViewModel(_store, _logger, project);
+        var viewModel = new SnapshotExportViewModel(
+            _store, _loggerFactory.CreateLogger<SnapshotExportViewModel>(), project);
         new SnapshotExportWindow(viewModel).Show();
     }
 }

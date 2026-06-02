@@ -10,9 +10,13 @@ public sealed class RevitSnapshotCommands : ISnapshotCommands, IDisposable
     private readonly SnapshotExternalEventHandler _handler;
     private readonly ExternalEvent _externalEvent;
 
-    public RevitSnapshotCommands(RevitSnapshotProvider provider, ISnapshotStore store, IPluginLogger logger)
+    public RevitSnapshotCommands(
+        RevitSnapshotProvider provider,
+        ISnapshotStore store,
+        IPluginLoggerFactory loggerFactory)
     {
-        _handler = new SnapshotExternalEventHandler(provider, store, logger);
+        _handler = new SnapshotExternalEventHandler(
+            provider, store, loggerFactory.CreateLogger<SnapshotExternalEventHandler>());
         _externalEvent = ExternalEvent.Create(_handler);
     }
 

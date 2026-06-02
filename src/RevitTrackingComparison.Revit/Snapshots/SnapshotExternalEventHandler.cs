@@ -16,7 +16,7 @@ internal sealed class SnapshotExternalEventHandler : IExternalEventHandler
 
     private readonly RevitSnapshotProvider _provider;
     private readonly ISnapshotStore _store;
-    private readonly IPluginLogger _logger;
+    private readonly IPluginLogger<SnapshotExternalEventHandler> _logger;
     private readonly ConcurrentQueue<SnapshotRequest> _queue = new();
 
     private readonly record struct SnapshotRequest(
@@ -28,7 +28,10 @@ internal sealed class SnapshotExternalEventHandler : IExternalEventHandler
     private SnapshotRequest _request;
     private CaptureSession? _session;
 
-    public SnapshotExternalEventHandler(RevitSnapshotProvider provider, ISnapshotStore store, IPluginLogger logger)
+    public SnapshotExternalEventHandler(
+        RevitSnapshotProvider provider,
+        ISnapshotStore store,
+        IPluginLogger<SnapshotExternalEventHandler> logger)
     {
         _provider = provider;
         _store = store;

@@ -15,10 +15,13 @@ public static class ServiceConfiguration
 {
     public static ServiceProvider Build(RevitContext context)
     {
+        PluginLog.Initialize();
+
         var services = new ServiceCollection();
 
         services.AddSingleton(context);
-        services.AddSingleton<IPluginLogger, NLogPluginLogger>();
+        services.AddSingleton(typeof(IPluginLogger<>), typeof(NLogPluginLogger<>));
+        services.AddSingleton<IPluginLoggerFactory, NLogPluginLoggerFactory>();
         services.AddSingleton<RevitSnapshotProvider>();
         services.AddSingleton<ISnapshotCommands, RevitSnapshotCommands>();
         services.AddSingleton<IModelEditor, RevitModelEditor>();

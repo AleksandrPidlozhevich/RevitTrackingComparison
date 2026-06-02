@@ -1,9 +1,12 @@
 using Autodesk.Revit.DB;
+using RevitTrackingComparison.Core.Abstractions;
 
 namespace RevitTrackingComparison.Revit.Infrastructure;
 
 public sealed class FailureSuppressor : IFailuresPreprocessor
 {
+    private static readonly IPluginLogger Logger = PluginLog.For(nameof(FailureSuppressor));
+
     public FailureProcessingResult PreprocessFailures(FailuresAccessor failuresAccessor)
     {
         var document = failuresAccessor.GetDocument();
@@ -41,7 +44,11 @@ public sealed class FailureSuppressor : IFailuresPreprocessor
 
         var where = elements.Count == 0 ? string.Empty : $" [{string.Join(", ", elements)}]";
         var prefix = kind == "ERROR" ? "Revit transaction error" : "Suppressed Revit warning";
-        PluginLog.Warn($"{prefix}: {message.GetDescriptionText()}{where}");
+        var text = $"{prefix}: {message.GetDescriptionText()}{where}";
+        if (kind == "ERROR")
+            Logger.Error(null, text);
+        else
+            Logger.Warn(text);
     }
 
     private static string Describe(Document document, ElementId id)

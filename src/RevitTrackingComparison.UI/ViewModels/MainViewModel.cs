@@ -18,7 +18,7 @@ public partial class MainViewModel : ObservableObject
 
     public MainViewModel(
         ISnapshotCommands commands,
-        IPluginLogger logger,
+        IPluginLogger<MainViewModel> logger,
         string project,
         Action openSettings,
         Action openCompare,
