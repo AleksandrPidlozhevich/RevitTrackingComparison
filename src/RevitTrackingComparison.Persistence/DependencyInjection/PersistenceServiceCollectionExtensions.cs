@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using RevitTrackingComparison.Core.Abstractions;
+using RevitTrackingComparison.Persistence.Config;
 
 namespace RevitTrackingComparison.Persistence.DependencyInjection;
 
@@ -15,6 +16,7 @@ public static class PersistenceServiceCollectionExtensions
         services.AddSingleton(options);
         services.AddSingleton<ILiteDbConnectionFactory, LiteDbConnectionFactory>();
         services.AddSingleton<ISnapshotStore, LiteDbSnapshotStore>();
+        services.AddSingleton<ICaptureSettingsStore, JsonCaptureSettingsStore>();
         return services;
     }
 }

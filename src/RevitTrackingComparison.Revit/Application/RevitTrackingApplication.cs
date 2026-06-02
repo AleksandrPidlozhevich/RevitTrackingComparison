@@ -9,8 +9,7 @@ namespace RevitTrackingComparison.Revit.Application;
 
 public sealed class RevitTrackingApplication : IExternalApplication
 {
-    private const string RibbonTab = "TrackingComparison";
-    private const string RibbonPanel = "Tracking";
+    private const string RibbonPanel = "Snapshot tracking";
 
     public static ServiceProvider? Services { get; private set; }
 
@@ -67,28 +66,24 @@ public sealed class RevitTrackingApplication : IExternalApplication
 
     private static void CreateRibbon(UIControlledApplication application)
     {
-        try
-        {
-            application.CreateRibbonTab(RibbonTab);
-        }
-        catch
-        {
-        }
-
-        var panel = application.GetRibbonPanels(RibbonTab)
+        // Single-argument overload always targets the built-in Add-Ins tab (localized name in the UI).
+        var panel = application.GetRibbonPanels()
                         .FirstOrDefault(p => p.Name == RibbonPanel)
-                    ?? application.CreateRibbonPanel(RibbonTab, RibbonPanel);
+                    ?? application.CreateRibbonPanel(RibbonPanel);
 
         var assemblyPath = Assembly.GetExecutingAssembly().Location;
-        var buttonData = new PushButtonData(
-            "ShowComparison",
-            "Compare\nsnapshots",
+        var hubButton = new PushButtonData(
+            "ShowSnapshotHub",
+            "Snapshots",
             assemblyPath,
-            typeof(Commands.ShowComparisonCommand).FullName)
+            typeof(Commands.ShowSnapshotHubCommand).FullName)
         {
-            ToolTip = "Capture a snapshot of the active document and compare it with the previous one."
+            ToolTip = "Open the snapshot hub: take a snapshot, edit capture settings, or compare snapshots."
         };
 
-        panel.AddItem(buttonData);
+        if (panel.AddItem(hubButton) is PushButton pushButton)
+            RibbonIconLoader.ApplyTo(pushButton);
+
+        PluginLog.Info($"Ribbon panel '{RibbonPanel}' registered on Add-Ins tab.");
     }
 }

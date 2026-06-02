@@ -7,7 +7,7 @@ public static class UiServiceCollectionExtensions
 {
     public static IServiceCollection AddUi(this IServiceCollection services)
     {
-        services.AddSingleton<IComparisonView, ComparisonView>();
+        services.AddSingleton<ISnapshotHubView, SnapshotHubView>();
         return services;
     }
 }

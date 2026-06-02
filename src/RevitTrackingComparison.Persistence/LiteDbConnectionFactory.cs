@@ -4,27 +4,15 @@ namespace RevitTrackingComparison.Persistence;
 
 public sealed class LiteDbConnectionFactory : ILiteDbConnectionFactory
 {
-    private readonly LiteDbOptions _options;
-
-    public LiteDbConnectionFactory(LiteDbOptions options)
+    public LiteDatabase Open(string fullPath)
     {
-        _options = options;
-    }
+        if (string.IsNullOrWhiteSpace(fullPath))
+            throw new ArgumentException("Path cannot be empty.", nameof(fullPath));
 
-    public LiteDatabase Open(string documentKey)
-    {
-        if (string.IsNullOrWhiteSpace(documentKey))
-            throw new ArgumentException("documentKey cannot be empty.", nameof(documentKey));
+        var directory = Path.GetDirectoryName(fullPath);
+        if (!string.IsNullOrEmpty(directory))
+            Directory.CreateDirectory(directory);
 
-        Directory.CreateDirectory(_options.DatabaseFolder);
-        var fileName = Sanitize(documentKey) + ".db";
-        var path = Path.Combine(_options.DatabaseFolder, fileName);
-        return new LiteDatabase($"Filename={path};Connection=shared");
-    }
-
-    private static string Sanitize(string value)
-    {
-        var invalid = Path.GetInvalidFileNameChars();
-        return new string(value.Select(c => invalid.Contains(c) ? '_' : c).ToArray());
+        return new LiteDatabase($"Filename={fullPath};Connection=shared");
     }
 }

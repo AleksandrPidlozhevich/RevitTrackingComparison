@@ -38,7 +38,6 @@ public static class PluginLog
                 Layout = "${longdate} [${level:uppercase=true}] ${message}"
                          + "${onexception:${newline}${exception:format=tostring}}",
                 KeepFileOpen = false,
-                ConcurrentWrites = true,
                 Encoding = System.Text.Encoding.UTF8
             };
 

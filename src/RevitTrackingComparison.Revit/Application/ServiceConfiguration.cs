@@ -3,6 +3,7 @@ using RevitTrackingComparison.Core.Abstractions;
 using RevitTrackingComparison.Core.DependencyInjection;
 using RevitTrackingComparison.Persistence.DependencyInjection;
 using RevitTrackingComparison.Revit.Events;
+using RevitTrackingComparison.Revit.Metadata;
 using RevitTrackingComparison.Revit.Infrastructure;
 using RevitTrackingComparison.Revit.Snapshots;
 using RevitTrackingComparison.UI.DependencyInjection;
@@ -16,7 +17,9 @@ public static class ServiceConfiguration
         var services = new ServiceCollection();
 
         services.AddSingleton(context);
-        services.AddSingleton<IRevitSnapshotProvider, RevitSnapshotProvider>();
+        services.AddSingleton<RevitSnapshotProvider>();
+        services.AddSingleton<ISnapshotCommands, RevitSnapshotCommands>();
+        services.AddSingleton<IModelMetadataProvider, RevitModelMetadataProvider>();
 
         services.AddCore();
         services.AddLiteDbPersistence();

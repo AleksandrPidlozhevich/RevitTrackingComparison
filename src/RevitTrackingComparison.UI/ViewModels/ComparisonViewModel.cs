@@ -14,15 +14,18 @@ public partial class ComparisonViewModel : ObservableObject
     public ObservableCollection<ElementChange> Removed { get; } = new();
     public ObservableCollection<ElementChange> Modified { get; } = new();
 
+    [ObservableProperty] private ElementChange? _selectedModified;
+
     public int AddedCount => Added.Count;
     public int RemovedCount => Removed.Count;
     public int ModifiedCount => Modified.Count;
 
     public void Load(SnapshotDiff? diff)
     {
-        Added.Clear();
-        Removed.Clear();
-        Modified.Clear();
+        ReplaceAll(Added, diff?.Added);
+        ReplaceAll(Removed, diff?.Removed);
+        ReplaceAll(Modified, diff?.Modified);
+        SelectedModified = null;
 
         if (diff is null)
         {
@@ -31,9 +34,6 @@ public partial class ComparisonViewModel : ObservableObject
         }
         else
         {
-            foreach (var change in diff.Added) Added.Add(change);
-            foreach (var change in diff.Removed) Removed.Add(change);
-            foreach (var change in diff.Modified) Modified.Add(change);
             HasChanges = diff.HasChanges;
             Title = HasChanges ? "Changes detected" : "No changes detected";
         }
@@ -41,5 +41,17 @@ public partial class ComparisonViewModel : ObservableObject
         OnPropertyChanged(nameof(AddedCount));
         OnPropertyChanged(nameof(RemovedCount));
         OnPropertyChanged(nameof(ModifiedCount));
+    }
+
+    private static void ReplaceAll(
+        ObservableCollection<ElementChange> target,
+        IReadOnlyList<ElementChange>? source)
+    {
+        target.Clear();
+        if (source is null || source.Count == 0)
+            return;
+
+        foreach (var item in source)
+            target.Add(item);
     }
 }

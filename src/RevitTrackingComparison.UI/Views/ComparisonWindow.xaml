@@ -1,66 +1,119 @@
 <Window x:Class="RevitTrackingComparison.UI.Views.ComparisonWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:converters="clr-namespace:RevitTrackingComparison.UI.Converters"
         Title="{Binding Title}"
-        Width="900" Height="600"
+        Width="960" Height="640"
         WindowStartupLocation="CenterScreen">
-    <Grid Margin="12">
+    <Window.Resources>
+        <converters:NullToVisibilityConverter x:Key="NullToVisibility" />
+    </Window.Resources>
+    <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,12">
-            <TextBlock Text="{Binding Title}" FontSize="16" FontWeight="Bold" VerticalAlignment="Center" />
-            <TextBlock Margin="20,0,0,0" VerticalAlignment="Center"
-                       Text="{Binding AddedCount, StringFormat='Added: {0}'}" Foreground="Green" />
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,16">
+            <TextBlock Style="{StaticResource MaterialDesignHeadline6TextBlock}" Text="{Binding Title}" />
+            <TextBlock Margin="24,0,0,0" VerticalAlignment="Center"
+                       Text="{Binding AddedCount, StringFormat='Added: {0}'}"
+                       Foreground="{StaticResource AddedAccentBrush}" />
             <TextBlock Margin="16,0,0,0" VerticalAlignment="Center"
-                       Text="{Binding RemovedCount, StringFormat='Removed: {0}'}" Foreground="Red" />
+                       Text="{Binding RemovedCount, StringFormat='Removed: {0}'}"
+                       Foreground="{StaticResource RemovedAccentBrush}" />
             <TextBlock Margin="16,0,0,0" VerticalAlignment="Center"
-                       Text="{Binding ModifiedCount, StringFormat='Modified: {0}'}" Foreground="DarkOrange" />
+                       Text="{Binding ModifiedCount, StringFormat='Modified: {0}'}"
+                       Foreground="{StaticResource ModifiedAccentBrush}" />
         </StackPanel>
 
         <TabControl Grid.Row="1">
-            <TabItem Header="Added">
-                <DataGrid ItemsSource="{Binding Added}" AutoGenerateColumns="False" IsReadOnly="True">
+            <TabItem Header="Added" Style="{StaticResource ComparisonTabAdded}">
+                <DataGrid Style="{StaticResource FlatDataGrid}" ItemsSource="{Binding Added}"
+                          materialDesign:DataGridAssist.CellPadding="12 8 8 8">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Category" Binding="{Binding After.Category}" Width="200" />
-                        <DataGridTextColumn Header="Name" Binding="{Binding After.Name}" Width="*" />
-                        <DataGridTextColumn Header="UniqueId" Binding="{Binding UniqueId}" Width="260" />
+                        <DataGridTextColumn Header="Name" Binding="{Binding After.Name}" Width="*" MinWidth="160" />
+                        <DataGridTextColumn Header="UniqueId" Binding="{Binding UniqueId}" Width="280" />
                     </DataGrid.Columns>
                 </DataGrid>
             </TabItem>
-            <TabItem Header="Removed">
-                <DataGrid ItemsSource="{Binding Removed}" AutoGenerateColumns="False" IsReadOnly="True">
+            <TabItem Header="Removed" Style="{StaticResource ComparisonTabRemoved}">
+                <DataGrid Style="{StaticResource FlatDataGrid}" ItemsSource="{Binding Removed}"
+                          materialDesign:DataGridAssist.CellPadding="12 8 8 8">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Category" Binding="{Binding Before.Category}" Width="200" />
-                        <DataGridTextColumn Header="Name" Binding="{Binding Before.Name}" Width="*" />
-                        <DataGridTextColumn Header="UniqueId" Binding="{Binding UniqueId}" Width="260" />
+                        <DataGridTextColumn Header="Name" Binding="{Binding Before.Name}" Width="*" MinWidth="160" />
+                        <DataGridTextColumn Header="UniqueId" Binding="{Binding UniqueId}" Width="280" />
                     </DataGrid.Columns>
                 </DataGrid>
             </TabItem>
-            <TabItem Header="Modified">
-                <DataGrid ItemsSource="{Binding Modified}" AutoGenerateColumns="False" IsReadOnly="True"
-                          RowDetailsVisibilityMode="VisibleWhenSelected">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="Category" Binding="{Binding After.Category}" Width="200" />
-                        <DataGridTextColumn Header="Name" Binding="{Binding After.Name}" Width="*" />
-                        <DataGridTextColumn Header="Changed parameters"
-                                            Binding="{Binding ChangedParameters.Count}" Width="180" />
-                    </DataGrid.Columns>
-                    <DataGrid.RowDetailsTemplate>
-                        <DataTemplate>
-                            <DataGrid ItemsSource="{Binding ChangedParameters}" AutoGenerateColumns="False"
-                                      IsReadOnly="True" HeadersVisibility="Column" Margin="20,4,4,4">
-                                <DataGrid.Columns>
-                                    <DataGridTextColumn Header="Parameter" Binding="{Binding Name}" Width="220" />
-                                    <DataGridTextColumn Header="Old value" Binding="{Binding OldValue}" Width="*" />
-                                    <DataGridTextColumn Header="New value" Binding="{Binding NewValue}" Width="*" />
-                                </DataGrid.Columns>
-                            </DataGrid>
-                        </DataTemplate>
-                    </DataGrid.RowDetailsTemplate>
-                </DataGrid>
+            <TabItem Header="Modified" Style="{StaticResource ComparisonTabModified}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="2*" MinHeight="120" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="3*" MinHeight="160" />
+                    </Grid.RowDefinitions>
+
+                    <ListView Grid.Row="0"
+                              ItemsSource="{Binding Modified}"
+                              SelectedItem="{Binding SelectedModified}"
+                              VirtualizingPanel.IsVirtualizing="True"
+                              VirtualizingPanel.VirtualizationMode="Recycling"
+                              ScrollViewer.CanContentScroll="True"
+                              BorderThickness="1"
+                              BorderBrush="{DynamicResource MaterialDesign.Brush.TextBox.HoverBackground}">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Header="Category" Width="180"
+                                                DisplayMemberBinding="{Binding After.Category}" />
+                                <GridViewColumn Header="Name" Width="360"
+                                                DisplayMemberBinding="{Binding After.Name}" />
+                                <GridViewColumn Header="Changes" Width="80"
+                                                DisplayMemberBinding="{Binding ChangedParameters.Count}" />
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+
+                    <TextBlock Grid.Row="1" Margin="0,8" Opacity="0.72"
+                               Style="{StaticResource MaterialDesignBody2TextBlock}"
+                               Text="Select an element above to view parameter changes."
+                               Visibility="{Binding SelectedModified, Converter={StaticResource NullToVisibility}, ConverterParameter=invert}" />
+
+                    <DataGrid Grid.Row="2" Style="{StaticResource FlatDataGrid}"
+                              ItemsSource="{Binding SelectedModified.ChangedParameters}"
+                              Visibility="{Binding SelectedModified, Converter={StaticResource NullToVisibility}}"
+                              materialDesign:DataGridAssist.CellPadding="12 8 8 8">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Parameter" Binding="{Binding Name}" Width="200" />
+                            <DataGridTextColumn Header="Old value" Binding="{Binding OldValue}" Width="*" MinWidth="160">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="TextWrapping" Value="Wrap" />
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="New value" Binding="{Binding NewValue}" Width="*" MinWidth="160">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="TextWrapping" Value="Wrap" />
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                        </DataGrid.Columns>
+                        <DataGrid.RowStyle>
+                            <Style TargetType="DataGridRow" BasedOn="{StaticResource MaterialDesignDataGridRow}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ValuesDiffer}" Value="True">
+                                        <Setter Property="Background" Value="{StaticResource ModifiedHighlightBrush}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.RowStyle>
+                    </DataGrid>
+                </Grid>
             </TabItem>
         </TabControl>
     </Grid>

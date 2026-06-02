@@ -4,9 +4,9 @@ using RevitTrackingComparison.UI.ViewModels;
 
 namespace RevitTrackingComparison.UI.Views;
 
-public partial class ComparisonWindow : Window
+public partial class MainWindow : Window
 {
-    public ComparisonWindow(ComparisonViewModel viewModel)
+    public MainWindow(MainViewModel viewModel)
     {
         WindowTheme.Apply(this);
         InitializeComponent();

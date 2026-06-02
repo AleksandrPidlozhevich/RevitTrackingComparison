@@ -1,86 +1,104 @@
+using System.Globalization;
 using RevitTrackingComparison.Core.Abstractions;
 using RevitTrackingComparison.Core.Domain;
 using RevitTrackingComparison.Persistence.Entities;
 
 namespace RevitTrackingComparison.Persistence;
 
+/// <summary>
+/// Stores each snapshot as its own LiteDB file under
+/// <c>{SnapshotsFolder}\{project}\{project}_{yyyyMMdd_HHmmss}.db</c>.
+/// </summary>
 public sealed class LiteDbSnapshotStore : ISnapshotStore
 {
     private const string Snapshots = "snapshots";
-    private const string Warnings = "warnings";
-    private const string Sessions = "sessions";
+    private const string TimestampFormat = "yyyyMMdd_HHmmss";
 
     private readonly ILiteDbConnectionFactory _connectionFactory;
+    private readonly LiteDbOptions _options;
 
-    public LiteDbSnapshotStore(ILiteDbConnectionFactory connectionFactory)
+    public LiteDbSnapshotStore(ILiteDbConnectionFactory connectionFactory, LiteDbOptions options)
     {
         _connectionFactory = connectionFactory;
+        _options = options;
     }
 
-    public void SaveSnapshot(string documentKey, DocumentSnapshot snapshot)
+    public bool HasSnapshots(string project)
     {
-        using var db = _connectionFactory.Open(documentKey);
-        db.GetCollection<SnapshotEntity>(Snapshots).Insert(snapshot.ToEntity());
+        var folder = ProjectFolder(Sanitize(project));
+        return Directory.Exists(folder) && Directory.EnumerateFiles(folder, "*.db").Any();
     }
 
-    public DocumentSnapshot? GetLatestSnapshot(string documentKey)
+    public SnapshotInfo Save(string project, DocumentSnapshot snapshot)
     {
-        using var db = _connectionFactory.Open(documentKey);
-        var entity = db.GetCollection<SnapshotEntity>(Snapshots)
-            .Query()
-            .OrderByDescending(x => x.CapturedAt)
-            .FirstOrDefault();
-        return entity?.ToDomain();
+        var safeProject = Sanitize(project);
+        var folder = ProjectFolder(safeProject);
+        Directory.CreateDirectory(folder);
+
+        var fileName = UniqueFileName(folder, safeProject, snapshot.CapturedAt);
+        var path = Path.Combine(folder, fileName);
+
+        using (var db = _connectionFactory.Open(path))
+            db.GetCollection<SnapshotEntity>(Snapshots).Insert(snapshot.ToEntity());
+
+        return new SnapshotInfo { Project = project, FileName = fileName, CapturedAt = snapshot.CapturedAt };
     }
 
-    public IReadOnlyList<DocumentSnapshot> GetSnapshots(string documentKey)
+    public IReadOnlyList<SnapshotInfo> List(string project)
     {
-        using var db = _connectionFactory.Open(documentKey);
-        return db.GetCollection<SnapshotEntity>(Snapshots)
-            .Query()
-            .OrderBy(x => x.CapturedAt)
-            .ToList()
-            .Select(e => e.ToDomain())
+        var folder = ProjectFolder(Sanitize(project));
+        if (!Directory.Exists(folder))
+            return Array.Empty<SnapshotInfo>();
+
+        return Directory.EnumerateFiles(folder, "*.db")
+            .Select(path => new SnapshotInfo
+            {
+                Project = project,
+                FileName = Path.GetFileName(path),
+                CapturedAt = ParseTimestamp(Path.GetFileNameWithoutExtension(path)) ?? File.GetLastWriteTime(path)
+            })
+            .OrderByDescending(info => info.CapturedAt)
             .ToList();
     }
 
-    public void SaveWarnings(string documentKey, IEnumerable<WarningRecord> warnings)
+    public DocumentSnapshot? Load(SnapshotInfo info)
     {
-        using var db = _connectionFactory.Open(documentKey);
-        var entities = warnings.Select(w => w.ToEntity(documentKey)).ToList();
-        if (entities.Count > 0)
-            db.GetCollection<WarningEntity>(Warnings).InsertBulk(entities);
+        var path = Path.Combine(ProjectFolder(Sanitize(info.Project)), info.FileName);
+        if (!File.Exists(path))
+            return null;
+
+        using var db = _connectionFactory.Open(path);
+        return db.GetCollection<SnapshotEntity>(Snapshots).Query().FirstOrDefault()?.ToDomain();
     }
 
-    public IReadOnlyList<WarningRecord> GetWarnings(string documentKey)
+    private string ProjectFolder(string safeProject) => Path.Combine(_options.SnapshotsFolder, safeProject);
+
+    private static string UniqueFileName(string folder, string safeProject, DateTime capturedAt)
     {
-        using var db = _connectionFactory.Open(documentKey);
-        return db.GetCollection<WarningEntity>(Warnings)
-            .FindAll()
-            .Select(e => e.ToDomain())
-            .ToList();
+        var baseName = $"{safeProject}_{capturedAt.ToString(TimestampFormat, CultureInfo.InvariantCulture)}";
+        var fileName = baseName + ".db";
+        var index = 2;
+        while (File.Exists(Path.Combine(folder, fileName)))
+            fileName = $"{baseName}_{index++}.db";
+        return fileName;
     }
 
-    public void SaveSession(string documentKey, WorkSession session)
+    private static DateTime? ParseTimestamp(string fileNameWithoutExtension)
     {
-        using var db = _connectionFactory.Open(documentKey);
-        db.GetCollection<SessionEntity>(Sessions).Insert(session.ToEntity(documentKey));
+        const int length = 15; // yyyyMMdd_HHmmss
+        if (fileNameWithoutExtension.Length < length)
+            return null;
+
+        var stamp = fileNameWithoutExtension[^length..];
+        return DateTime.TryParseExact(
+            stamp, TimestampFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsed)
+            ? parsed
+            : null;
     }
 
-    public IReadOnlyList<WorkSession> GetSessions(string documentKey)
+    private static string Sanitize(string value)
     {
-        using var db = _connectionFactory.Open(documentKey);
-        return db.GetCollection<SessionEntity>(Sessions)
-            .FindAll()
-            .Select(e => e.ToDomain())
-            .ToList();
-    }
-
-    public void Clear(string documentKey)
-    {
-        using var db = _connectionFactory.Open(documentKey);
-        db.GetCollection<SnapshotEntity>(Snapshots).DeleteAll();
-        db.GetCollection<WarningEntity>(Warnings).DeleteAll();
-        db.GetCollection<SessionEntity>(Sessions).DeleteAll();
+        var invalid = Path.GetInvalidFileNameChars();
+        return new string(value.Select(c => invalid.Contains(c) ? '_' : c).ToArray());
     }
 }

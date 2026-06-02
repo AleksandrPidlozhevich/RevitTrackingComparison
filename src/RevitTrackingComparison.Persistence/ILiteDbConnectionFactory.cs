@@ -4,5 +4,6 @@ namespace RevitTrackingComparison.Persistence;
 
 public interface ILiteDbConnectionFactory
 {
-    LiteDatabase Open(string documentKey);
+    /// <summary>Opens (creating the parent folder if needed) the LiteDB file at the given path.</summary>
+    LiteDatabase Open(string fullPath);
 }

@@ -5,25 +5,31 @@ using RevitTrackingComparison.Revit.Infrastructure;
 
 namespace RevitTrackingComparison.Revit.Snapshots;
 
-public sealed class RevitSnapshotProvider : IRevitSnapshotProvider
+/// <summary>
+/// Captures a <see cref="DocumentSnapshot"/> from a Revit document, recording only the categories
+/// and parameters listed in the capture configuration.
+/// </summary>
+public sealed class RevitSnapshotProvider
 {
-    private readonly RevitContext _context;
+    private readonly ICaptureSettingsStore _settingsStore;
 
-    public RevitSnapshotProvider(RevitContext context)
+    public RevitSnapshotProvider(ICaptureSettingsStore settingsStore)
     {
-        _context = context;
+        _settingsStore = settingsStore;
     }
 
-    public DocumentSnapshot? CaptureActiveDocument()
+    /// <summary>Captures the given document. Reads the model, so it must run on the Revit API thread.</summary>
+    public DocumentSnapshot? Capture(Document? doc)
     {
-        var doc = _context.ActiveDocument;
         if (doc is null)
             return null;
 
+        var settings = _settingsStore.Load();
+
         var elements = new FilteredElementCollector(doc)
             .WhereElementIsNotElementType()
-            .Where(e => e.Category is not null)
-            .Select(Map)
+            .Where(e => e.Category is not null && settings.IncludesCategory(e.Category.Name))
+            .Select(e => Map(e, settings))
             .ToList();
 
         return new DocumentSnapshot
@@ -35,15 +41,16 @@ public sealed class RevitSnapshotProvider : IRevitSnapshotProvider
         };
     }
 
-    private static ElementSnapshot Map(Element element)
+    private static ElementSnapshot Map(Element element, CaptureSettings settings)
     {
+        var category = element.Category?.Name ?? string.Empty;
         return new ElementSnapshot
         {
             UniqueId = element.UniqueId,
             ElementId = element.Id.Value,
-            Category = element.Category?.Name ?? string.Empty,
+            Category = category,
             Name = SafeName(element),
-            Parameters = ReadParameters(element)
+            Parameters = ReadParameters(element, settings.ParametersFor(category))
         };
     }
 
@@ -59,16 +66,16 @@ public sealed class RevitSnapshotProvider : IRevitSnapshotProvider
         }
     }
 
-    private static Dictionary<string, string> ReadParameters(Element element)
+    private static Dictionary<string, string> ReadParameters(Element element, IReadOnlyList<string> names)
     {
         var result = new Dictionary<string, string>();
-        foreach (Parameter parameter in element.Parameters)
+        foreach (var name in names)
         {
-            if (!parameter.HasValue)
+            if (result.ContainsKey(name))
                 continue;
 
-            var name = parameter.Definition?.Name;
-            if (string.IsNullOrEmpty(name) || result.ContainsKey(name))
+            var parameter = element.LookupParameter(name);
+            if (parameter is null || !parameter.HasValue)
                 continue;
 
             var value = parameter.AsValueString() ?? parameter.AsString();

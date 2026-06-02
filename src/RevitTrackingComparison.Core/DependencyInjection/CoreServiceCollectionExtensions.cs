@@ -9,7 +9,6 @@ public static class CoreServiceCollectionExtensions
     public static IServiceCollection AddCore(this IServiceCollection services)
     {
         services.AddSingleton<ISnapshotComparer, SnapshotComparer>();
-        services.AddSingleton<ISnapshotTrackingService, SnapshotTrackingService>();
         return services;
     }
 }

@@ -1,0 +1,34 @@
+<Window x:Class="RevitTrackingComparison.UI.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="Snapshots"
+        Width="400" Height="320"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="CanMinimize">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Margin="0,0,0,20"
+                   Style="{StaticResource MaterialDesignSubtitle1TextBlock}"
+                   Text="{Binding Project, StringFormat='Project: {0}'}"
+                   TextTrimming="CharacterEllipsis" />
+
+        <Button Grid.Row="1" Style="{StaticResource PrimaryButton}" Content="Take snapshot"
+                Command="{Binding TakeSnapshotCommand}" />
+        <Button Grid.Row="2" Style="{StaticResource PrimaryButton}" Content="Capture settings"
+                Command="{Binding OpenSettingsCommand}" />
+        <Button Grid.Row="3" Style="{StaticResource PrimaryButton}" Content="Compare snapshots"
+                Command="{Binding OpenCompareCommand}" />
+
+        <TextBlock Grid.Row="4" VerticalAlignment="Bottom" TextWrapping="Wrap"
+                   Style="{StaticResource MaterialDesignBody2TextBlock}"
+                   Opacity="0.72" Text="{Binding Status}" />
+    </Grid>
+</Window>

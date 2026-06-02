@@ -19,22 +19,3 @@ internal sealed class ElementEntity
     public string Name { get; set; } = string.Empty;
     public Dictionary<string, string> Parameters { get; set; } = new();
 }
-
-internal sealed class WarningEntity
-{
-    [BsonId] public Guid Id { get; set; } = Guid.NewGuid();
-    public string DocumentKey { get; set; } = string.Empty;
-    public string DefinitionGuid { get; set; } = string.Empty;
-    public string Description { get; set; } = string.Empty;
-    public List<string> FailingElements { get; set; } = new();
-    public string CreatedBy { get; set; } = string.Empty;
-    public DateTime CreatedAt { get; set; }
-}
-
-internal sealed class SessionEntity
-{
-    [BsonId] public Guid Id { get; set; } = Guid.NewGuid();
-    public string DocumentKey { get; set; } = string.Empty;
-    public DateTime StartTime { get; set; }
-    public DateTime? EndTime { get; set; }
-}
