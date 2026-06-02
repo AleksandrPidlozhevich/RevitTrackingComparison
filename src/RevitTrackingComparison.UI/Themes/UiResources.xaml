@@ -11,6 +11,8 @@
     <SolidColorBrush x:Key="RemovedAccentBrush" Color="#E53935" />
     <SolidColorBrush x:Key="ModifiedAccentBrush" Color="#FB8C00" />
     <SolidColorBrush x:Key="ModifiedHighlightBrush" Color="#FFF3E0" />
+    <!-- Brighter orange for the rows whose value actually changed (stands out among unchanged rows). -->
+    <SolidColorBrush x:Key="ChangedParameterBrush" Color="#FFCC80" />
 
     <Style x:Key="AppWindow" TargetType="Window">
         <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Background}" />

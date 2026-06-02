@@ -15,19 +15,22 @@ public sealed class SnapshotHubView : ISnapshotHubView
     private readonly ISnapshotComparer _comparer;
     private readonly ICaptureSettingsStore _settingsStore;
     private readonly IModelMetadataProvider _metadata;
+    private readonly IModelEditor _editor;
 
     public SnapshotHubView(
         ISnapshotCommands commands,
         ISnapshotStore store,
         ISnapshotComparer comparer,
         ICaptureSettingsStore settingsStore,
-        IModelMetadataProvider metadata)
+        IModelMetadataProvider metadata,
+        IModelEditor editor)
     {
         _commands = commands;
         _store = store;
         _comparer = comparer;
         _settingsStore = settingsStore;
         _metadata = metadata;
+        _editor = editor;
     }
 
     public void Show(string project)
@@ -44,7 +47,7 @@ public sealed class SnapshotHubView : ISnapshotHubView
 
     private void OpenCompare(string project)
     {
-        var viewModel = new SnapshotCompareViewModel(_store, _comparer, project);
+        var viewModel = new SnapshotCompareViewModel(_store, _comparer, _editor, project);
         new SnapshotCompareWindow(viewModel).Show();
     }
 }

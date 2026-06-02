@@ -15,6 +15,7 @@ public partial class SnapshotCompareViewModel : ObservableObject
 {
     private readonly ISnapshotStore _store;
     private readonly ISnapshotComparer _comparer;
+    private readonly IModelEditor _editor;
 
     public ObservableCollection<SnapshotInfo> Snapshots { get; } = new();
 
@@ -27,10 +28,11 @@ public partial class SnapshotCompareViewModel : ObservableObject
     [ObservableProperty]
     private string _status = string.Empty;
 
-    public SnapshotCompareViewModel(ISnapshotStore store, ISnapshotComparer comparer, string project)
+    public SnapshotCompareViewModel(ISnapshotStore store, ISnapshotComparer comparer, IModelEditor editor, string project)
     {
         _store = store;
         _comparer = comparer;
+        _editor = editor;
 
         foreach (var info in store.List(project)) // newest first
             Snapshots.Add(info);
@@ -57,7 +59,7 @@ public partial class SnapshotCompareViewModel : ObservableObject
         }
 
         var diff = _comparer.Compare(from, to);
-        var viewModel = new ComparisonViewModel();
+        var viewModel = new ComparisonViewModel(_editor);
         viewModel.Load(diff);
         new ComparisonWindow(viewModel).Show();
         Status = string.Empty;

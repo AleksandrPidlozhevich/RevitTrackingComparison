@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using RevitTrackingComparison.Core.Abstractions;
 using RevitTrackingComparison.Core.DependencyInjection;
 using RevitTrackingComparison.Persistence.DependencyInjection;
+using RevitTrackingComparison.Revit.Editing;
 using RevitTrackingComparison.Revit.Events;
 using RevitTrackingComparison.Revit.Metadata;
 using RevitTrackingComparison.Revit.Infrastructure;
@@ -19,6 +20,7 @@ public static class ServiceConfiguration
         services.AddSingleton(context);
         services.AddSingleton<RevitSnapshotProvider>();
         services.AddSingleton<ISnapshotCommands, RevitSnapshotCommands>();
+        services.AddSingleton<IModelEditor, RevitModelEditor>();
         services.AddSingleton<IModelMetadataProvider, RevitModelMetadataProvider>();
 
         services.AddCore();

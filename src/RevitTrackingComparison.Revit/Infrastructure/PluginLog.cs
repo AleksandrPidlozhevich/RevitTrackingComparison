@@ -1,5 +1,4 @@
 using System.IO;
-using System.Reflection;
 using NLog;
 using NLog.Config;
 using NLog.Targets;
@@ -29,8 +28,11 @@ public static class PluginLog
     {
         try
         {
-            var assemblyDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
-            var logDirectory = Path.Combine(assemblyDir, "logs");
+            // %AppData%\TrackingComparison\log — same data root as snapshots and capture config.
+            var logDirectory = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "TrackingComparison",
+                "log");
 
             var fileTarget = new FileTarget("file")
             {
