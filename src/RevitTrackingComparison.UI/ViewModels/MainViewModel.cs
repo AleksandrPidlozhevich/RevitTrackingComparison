@@ -14,18 +14,21 @@ public partial class MainViewModel : ObservableObject
     private readonly IPluginLogger _logger;
     private readonly Action _openSettings;
     private readonly Action _openCompare;
+    private readonly Action _openExport;
 
     public MainViewModel(
         ISnapshotCommands commands,
         IPluginLogger logger,
         string project,
         Action openSettings,
-        Action openCompare)
+        Action openCompare,
+        Action openExport)
     {
         _commands = commands;
         _logger = logger;
         _openSettings = openSettings;
         _openCompare = openCompare;
+        _openExport = openExport;
         Project = project;
     }
 
@@ -93,4 +96,7 @@ public partial class MainViewModel : ObservableObject
 
     [RelayCommand]
     private void OpenCompare() => _openCompare();
+
+    [RelayCommand]
+    private void OpenExport() => _openExport();
 }

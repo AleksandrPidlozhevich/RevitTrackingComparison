@@ -38,7 +38,13 @@ public sealed class SnapshotHubView : ISnapshotHubView
 
     public void Show(string project)
     {
-        var viewModel = new MainViewModel(_commands, _logger, project, OpenSettings, () => OpenCompare(project));
+        var viewModel = new MainViewModel(
+            _commands,
+            _logger,
+            project,
+            OpenSettings,
+            () => OpenCompare(project),
+            () => OpenExport(project));
         new MainWindow(viewModel).Show();
     }
 
@@ -52,5 +58,11 @@ public sealed class SnapshotHubView : ISnapshotHubView
     {
         var viewModel = new SnapshotCompareViewModel(_store, _comparer, _editor, _logger, project);
         new SnapshotCompareWindow(viewModel).Show();
+    }
+
+    private void OpenExport(string project)
+    {
+        var viewModel = new SnapshotExportViewModel(_store, _logger, project);
+        new SnapshotExportWindow(viewModel).Show();
     }
 }
