@@ -25,7 +25,7 @@ public sealed class LiteDbSnapshotStoreTests
         try
         {
             if (Directory.Exists(_root))
-                Directory.Delete(_root, recursive: true);
+                Directory.Delete(_root, true);
         }
         catch
         {
@@ -52,11 +52,11 @@ public sealed class LiteDbSnapshotStoreTests
     {
         var snapshot = TestSnapshots.Create(
             TestSnapshots.Element(
-                uniqueId: "uid-1",
-                elementId: 42,
-                category: "Walls",
-                name: "Basic Wall",
-                parameters: new Dictionary<string, string> { ["Height"] = "3000", ["Comments"] = "ok" }));
+                "uid-1",
+                42,
+                "Walls",
+                "Basic Wall",
+                new Dictionary<string, string> { ["Height"] = "3000", ["Comments"] = "ok" }));
 
         var info = await _sut.SaveAsync(snapshot.DocumentKey, snapshot);
         var loaded = await _sut.LoadAsync(info);
@@ -154,7 +154,9 @@ public sealed class LiteDbSnapshotStoreTests
         // Replace the file with an empty (but valid) database — no snapshot inside.
         var path = Path.Combine(_options.SnapshotsFolder, "p.rvt", info.Id.Value);
         File.Delete(path);
-        using (var _ = new LiteDbConnectionFactory().Open(path)) { }
+        using (var _ = new LiteDbConnectionFactory().Open(path))
+        {
+        }
 
         var loaded = await _sut.LoadAsync(info);
 

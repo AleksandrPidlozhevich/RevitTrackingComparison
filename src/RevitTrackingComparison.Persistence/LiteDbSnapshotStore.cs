@@ -29,14 +29,21 @@ public sealed class LiteDbSnapshotStore : ISnapshotStore
     }
 
     // LiteDB has no async API; offload the blocking file I/O so the calling (UI/API) thread is free.
-    public Task<SnapshotInfo> SaveAsync(string project, DocumentSnapshot snapshot, CancellationToken cancellationToken = default)
-        => Task.Run(() => Save(project, snapshot), cancellationToken);
+    public Task<SnapshotInfo> SaveAsync(string project, DocumentSnapshot snapshot,
+        CancellationToken cancellationToken = default)
+    {
+        return Task.Run(() => Save(project, snapshot), cancellationToken);
+    }
 
     public Task<IReadOnlyList<SnapshotInfo>> ListAsync(string project, CancellationToken cancellationToken = default)
-        => Task.Run(() => List(project), cancellationToken);
+    {
+        return Task.Run(() => List(project), cancellationToken);
+    }
 
     public Task<DocumentSnapshot?> LoadAsync(SnapshotInfo info, CancellationToken cancellationToken = default)
-        => Task.Run(() => Load(info), cancellationToken);
+    {
+        return Task.Run(() => Load(info), cancellationToken);
+    }
 
     private SnapshotInfo Save(string project, DocumentSnapshot snapshot)
     {

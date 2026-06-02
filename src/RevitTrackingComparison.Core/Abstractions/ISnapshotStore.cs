@@ -16,7 +16,8 @@ public interface ISnapshotStore
     bool HasSnapshots(string project);
 
     /// <summary>Writes <paramref name="snapshot"/> to a new timestamped file and returns its handle.</summary>
-    Task<SnapshotInfo> SaveAsync(string project, DocumentSnapshot snapshot, CancellationToken cancellationToken = default);
+    Task<SnapshotInfo> SaveAsync(string project, DocumentSnapshot snapshot,
+        CancellationToken cancellationToken = default);
 
     /// <summary>Lists the project's snapshots (handles only, no element data), newest first.</summary>
     Task<IReadOnlyList<SnapshotInfo>> ListAsync(string project, CancellationToken cancellationToken = default);

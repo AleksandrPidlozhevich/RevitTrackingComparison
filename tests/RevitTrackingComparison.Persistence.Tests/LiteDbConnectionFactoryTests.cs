@@ -34,7 +34,7 @@ public sealed class LiteDbConnectionFactoryTests
         finally
         {
             if (Directory.Exists(dir))
-                Directory.Delete(dir, recursive: true);
+                Directory.Delete(dir, true);
         }
     }
 }

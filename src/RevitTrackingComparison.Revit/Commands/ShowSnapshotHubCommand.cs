@@ -9,5 +9,7 @@ namespace RevitTrackingComparison.Revit.Commands;
 public sealed class ShowSnapshotHubCommand : IExternalCommand
 {
     public Result Execute(ExternalCommandData commandData, ref string message, Autodesk.Revit.DB.ElementSet elements)
-        => CommandHost.Run<SnapshotHubLauncher>(ref message, launcher => launcher.Open(commandData.Application));
+    {
+        return CommandHost.Run<SnapshotHubLauncher>(ref message, launcher => launcher.Open(commandData.Application));
+    }
 }

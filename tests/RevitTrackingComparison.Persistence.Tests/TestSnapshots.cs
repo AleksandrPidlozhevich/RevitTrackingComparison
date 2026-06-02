@@ -9,13 +9,18 @@ internal static class TestSnapshots
     public static readonly DateTime DefaultCapturedAt = new(2025, 1, 1, 12, 0, 0, DateTimeKind.Utc);
 
     public static DocumentSnapshot Create(params ElementSnapshot[] elements)
-        => Create(DefaultCapturedAt, "test.rvt", elements);
+    {
+        return Create(DefaultCapturedAt, "test.rvt", elements);
+    }
 
     public static DocumentSnapshot Create(DateTime capturedAt, params ElementSnapshot[] elements)
-        => Create(capturedAt, "test.rvt", elements);
+    {
+        return Create(capturedAt, "test.rvt", elements);
+    }
 
     public static DocumentSnapshot Create(DateTime capturedAt, string documentKey, params ElementSnapshot[] elements)
-        => new()
+    {
+        return new DocumentSnapshot
         {
             Id = Guid.NewGuid(),
             DocumentKey = documentKey,
@@ -23,6 +28,7 @@ internal static class TestSnapshots
             CapturedAt = capturedAt,
             Elements = elements
         };
+    }
 
     public static ElementSnapshot Element(
         string uniqueId = "uid-1",
@@ -30,7 +36,8 @@ internal static class TestSnapshots
         string category = "Walls",
         string name = "Basic Wall",
         IReadOnlyDictionary<string, string>? parameters = null)
-        => new()
+    {
+        return new ElementSnapshot
         {
             UniqueId = uniqueId,
             ElementId = elementId,
@@ -38,4 +45,5 @@ internal static class TestSnapshots
             Name = name,
             Parameters = parameters ?? new Dictionary<string, string>()
         };
+    }
 }

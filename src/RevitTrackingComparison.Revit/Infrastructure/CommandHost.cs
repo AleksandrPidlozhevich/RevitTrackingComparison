@@ -10,9 +10,15 @@ internal static class CommandHost
 
     private static IServiceProvider? _services;
 
-    public static void SetServices(IServiceProvider services) => _services = services;
+    public static void SetServices(IServiceProvider services)
+    {
+        _services = services;
+    }
 
-    public static void ClearServices() => _services = null;
+    public static void ClearServices()
+    {
+        _services = null;
+    }
 
     // The action returns null on success or a user-facing error message; this maps it to a Result and
     // sets the command's out message.
