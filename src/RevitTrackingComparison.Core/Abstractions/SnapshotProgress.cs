@@ -13,4 +13,9 @@ public enum SnapshotProgressPhase
     Saving
 }
 
-public readonly record struct SnapshotProgress(SnapshotProgressPhase Phase, int ElementCount = 0);
+/// <summary>
+/// A progress update. During <see cref="SnapshotProgressPhase.Capturing"/>, <paramref name="Current"/>
+/// is the number of elements read so far out of <paramref name="Total"/>. During
+/// <see cref="SnapshotProgressPhase.Saving"/>, <paramref name="Current"/> is the captured element count.
+/// </summary>
+public readonly record struct SnapshotProgress(SnapshotProgressPhase Phase, int Current = 0, int Total = 0);

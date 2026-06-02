@@ -1,7 +1,6 @@
 using Autodesk.Revit.DB;
 using RevitTrackingComparison.Core.Abstractions;
 using RevitTrackingComparison.Core.Domain;
-using RevitTrackingComparison.Revit.Infrastructure;
 
 namespace RevitTrackingComparison.Revit.Snapshots;
 
@@ -18,71 +17,40 @@ public sealed class RevitSnapshotProvider
         _settingsStore = settingsStore;
     }
 
-    /// <summary>Captures the given document. Reads the model, so it must run on the Revit API thread.</summary>
-    public DocumentSnapshot? Capture(Document? doc)
+    /// <summary>
+    /// Begins an incremental capture: the configured elements are listed up front, then read in slices
+    /// via <see cref="CaptureSession.ProcessBatch"/> so the API thread can be yielded between slices.
+    /// Reads the model, so it must run on the Revit API thread. Returns null if there is no document.
+    /// </summary>
+    public CaptureSession? BeginCapture(Document? doc)
     {
         if (doc is null)
             return null;
 
         var settings = _settingsStore.Load();
 
-        var elements = new FilteredElementCollector(doc)
+        var ids = new FilteredElementCollector(doc)
             .WhereElementIsNotElementType()
             .Where(e => e.Category is not null && settings.IncludesCategory(e.Category.Name))
-            .Select(e => Map(e, settings))
+            .Select(e => e.Id)
             .ToList();
 
-        return new DocumentSnapshot
-        {
-            DocumentKey = RevitDocumentKey.Compute(doc),
-            Title = doc.Title,
-            CapturedAt = DateTime.Now,
-            Elements = elements
-        };
+        return new CaptureSession(doc, settings, ids);
     }
 
-    private static ElementSnapshot Map(Element element, CaptureSettings settings)
+    /// <summary>
+    /// Captures the whole document in a single pass. Convenience for non-interactive callers (e.g. the
+    /// open trigger) where slicing isn't needed. Reads the model, so it must run on the API thread.
+    /// </summary>
+    public DocumentSnapshot? Capture(Document? doc)
     {
-        var category = element.Category?.Name ?? string.Empty;
-        return new ElementSnapshot
-        {
-            UniqueId = element.UniqueId,
-            ElementId = element.Id.Value,
-            Category = category,
-            Name = SafeName(element),
-            Parameters = ReadParameters(element, settings.ParametersFor(category))
-        };
-    }
+        var session = BeginCapture(doc);
+        if (session is null)
+            return null;
 
-    private static string SafeName(Element element)
-    {
-        try
-        {
-            return element.Name ?? string.Empty;
-        }
-        catch
-        {
-            return string.Empty;
-        }
-    }
+        while (!session.IsComplete)
+            session.ProcessBatch(int.MaxValue);
 
-    private static Dictionary<string, string> ReadParameters(Element element, IReadOnlyList<string> names)
-    {
-        var result = new Dictionary<string, string>();
-        foreach (var name in names)
-        {
-            if (result.ContainsKey(name))
-                continue;
-
-            var parameter = element.LookupParameter(name);
-            if (parameter is null || !parameter.HasValue)
-                continue;
-
-            var value = parameter.AsValueString() ?? parameter.AsString();
-            if (value is not null)
-                result[name] = value;
-        }
-
-        return result;
+        return session.BuildSnapshot();
     }
 }

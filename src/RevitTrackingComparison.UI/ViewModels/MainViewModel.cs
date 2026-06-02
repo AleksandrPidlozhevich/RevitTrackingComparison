@@ -42,7 +42,7 @@ public partial class MainViewModel : ObservableObject
         {
             var result = await _commands.TakeSnapshotAsync(progress);
             Status = result.Success
-                ? $"Saved: {result.Info?.FileName}"
+                ? $"Saved: {result.Info?.DisplayName}"
                 : $"Error: {result.Message}";
         }
         finally
@@ -56,13 +56,15 @@ public partial class MainViewModel : ObservableObject
         if (update.Phase == SnapshotProgressPhase.Saving)
         {
             IsBusy = false;
-            Status = update.ElementCount > 0
-                ? $"Captured {update.ElementCount} elements. Saving…"
+            Status = update.Current > 0
+                ? $"Captured {update.Current} elements. Saving…"
                 : "Saving snapshot…";
             return;
         }
 
-        Status = "Reading model…";
+        Status = update.Total > 0
+            ? $"Reading model… {update.Current}/{update.Total}"
+            : "Reading model…";
     }
 
     private bool CanTakeSnapshot => !IsBusy;

@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace RevitTrackingComparison.Core.Domain;
 
 /// <summary>
@@ -7,9 +9,11 @@ namespace RevitTrackingComparison.Core.Domain;
 public sealed class SnapshotInfo
 {
     public string Project { get; init; } = string.Empty;
-
-    /// <summary>File name of the snapshot, e.g. <c>Project_20260602_142530.db</c>.</summary>
     public string FileName { get; init; } = string.Empty;
 
     public DateTime CapturedAt { get; init; }
+    
+    public string DisplayName =>
+        CapturedAt.ToString("dd.MM.yyyy HH:mm:ss", CultureInfo.CurrentCulture);
 }
+ 

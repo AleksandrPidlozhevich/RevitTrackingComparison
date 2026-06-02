@@ -7,12 +7,16 @@ namespace RevitTrackingComparison.Persistence;
 
 /// <summary>
 /// Stores each snapshot as its own LiteDB file under
-/// <c>{SnapshotsFolder}\{project}\{project}_{yyyyMMdd_HHmmss}.db</c>.
+/// <c>{SnapshotsFolder}\{project}\{project}_{yyyy.MM.dd_HH.mm.ss}.db</c> (dots; colons are invalid in file names).
+/// Legacy files <c>yyyyMMdd_HHmmss</c> remain readable.
 /// </summary>
 public sealed class LiteDbSnapshotStore : ISnapshotStore
 {
     private const string Snapshots = "snapshots";
-    private const string TimestampFormat = "yyyyMMdd_HHmmss";
+    private const string TimestampFormat = "yyyy.MM.dd_HH.mm.ss";
+    private const int TimestampLength = 19;
+    private const string LegacyTimestampFormat = "yyyyMMdd_HHmmss";
+    private const int LegacyTimestampLength = 15;
 
     private readonly ILiteDbConnectionFactory _connectionFactory;
     private readonly LiteDbOptions _options;
@@ -85,15 +89,28 @@ public sealed class LiteDbSnapshotStore : ISnapshotStore
 
     private static DateTime? ParseTimestamp(string fileNameWithoutExtension)
     {
-        const int length = 15; // yyyyMMdd_HHmmss
-        if (fileNameWithoutExtension.Length < length)
-            return null;
+        if (TryParseTrailingStamp(fileNameWithoutExtension, TimestampFormat, TimestampLength, out var parsed))
+            return parsed;
 
-        var stamp = fileNameWithoutExtension[^length..];
+        if (TryParseTrailingStamp(fileNameWithoutExtension, LegacyTimestampFormat, LegacyTimestampLength, out parsed))
+            return parsed;
+
+        return null;
+    }
+
+    private static bool TryParseTrailingStamp(
+        string fileNameWithoutExtension,
+        string format,
+        int stampLength,
+        out DateTime parsed)
+    {
+        parsed = default;
+        if (fileNameWithoutExtension.Length < stampLength)
+            return false;
+
+        var stamp = fileNameWithoutExtension[^stampLength..];
         return DateTime.TryParseExact(
-            stamp, TimestampFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsed)
-            ? parsed
-            : null;
+            stamp, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out parsed);
     }
 
     private static string Sanitize(string value)

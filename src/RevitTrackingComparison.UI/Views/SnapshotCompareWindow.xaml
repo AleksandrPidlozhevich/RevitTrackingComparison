@@ -23,14 +23,14 @@
         <ComboBox Grid.Row="0" Grid.Column="1" Margin="0,0,0,12"
                   Style="{StaticResource MaterialDesignOutlinedComboBox}"
                   ItemsSource="{Binding Snapshots}" SelectedItem="{Binding From}"
-                  DisplayMemberPath="FileName" />
+                  DisplayMemberPath="DisplayName" />
 
         <TextBlock Grid.Row="1" Grid.Column="0" Margin="0,0,12,12" VerticalAlignment="Center"
                    Text="Compare with (newer):" />
         <ComboBox Grid.Row="1" Grid.Column="1" Margin="0,0,0,12"
                   Style="{StaticResource MaterialDesignOutlinedComboBox}"
                   ItemsSource="{Binding Snapshots}" SelectedItem="{Binding To}"
-                  DisplayMemberPath="FileName" />
+                  DisplayMemberPath="DisplayName" />
 
         <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Margin="0,4,0,0">
             <Button Style="{StaticResource MaterialDesignRaisedButton}" Content="Compare"
