@@ -1,0 +1,23 @@
+<Project Sdk="WixToolset.Sdk/6.0.2">
+
+    <PropertyGroup>
+        <OutputType>Package</OutputType>
+        <Platform>x64</Platform>
+        <InstallerPlatform>x64</InstallerPlatform>
+        <Version>1.0.0.0</Version>
+        <PackageVersion>$(Version)</PackageVersion>
+        <DefineConstants>PackageVersion=$(PackageVersion)</DefineConstants>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="WixToolset.Util.wixext" Version="6.0.2"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\src\RevitTrackingComparison.Revit\RevitTrackingComparison.Revit.csproj">
+            <Name>RevitAddIn</Name>
+            <Properties>Configuration=Release</Properties>
+        </ProjectReference>
+    </ItemGroup>
+
+</Project>

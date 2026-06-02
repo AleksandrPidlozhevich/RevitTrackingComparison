@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+
+    <Package
+        Name="Revit Tracking Comparison"
+        Manufacturer="Aliaksandr Pidlazhevich"
+        Version="$(PackageVersion)"
+        UpgradeCode="a8f3e2b1-4c5d-6e7f-8a9b-0c1d2e3f4a5b"
+        Scope="perMachine">
+
+        <MajorUpgrade
+            AllowDowngrades="no"
+            DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+
+        <MediaTemplate EmbedCab="yes" />
+
+        <Feature Id="MainFeature" Title="Revit Tracking Comparison" Level="1">
+            <ComponentGroupRef Id="AddInFiles" />
+            <ComponentRef Id="RevitAddInManifest" />
+            <ComponentRef Id="CleanupTrackingComparisonData" />
+        </Feature>
+
+        <Property Id="TRACKINGDATAFOLDER_PROP" Secure="yes">
+            <RegistrySearch Id="TrackingDataFolderSearch"
+                            Root="HKCU"
+                            Key="Software\AliaksandrPidlazhevich\RevitTrackingComparison"
+                            Name="TrackingDataPath"
+                            Type="raw"/>
+        </Property>
+
+        <StandardDirectory Id="AppDataFolder">
+            <Directory Id="TrackingComparisonDataFolder" Name="TrackingComparison"/>
+        </StandardDirectory>
+
+        <StandardDirectory Id="CommonAppDataFolder">
+            <Directory Id="AutodeskFolder" Name="Autodesk">
+                <Directory Id="RevitFolder" Name="Revit">
+                    <Directory Id="AddinsFolder" Name="Addins">
+                        <Directory Id="Revit2026Folder" Name="2026">
+                            <Directory Id="INSTALLFOLDER" Name="RevitTrackingComparison" />
+                        </Directory>
+                    </Directory>
+                </Directory>
+            </Directory>
+        </StandardDirectory>
+
+    </Package>
+
+    <Fragment>
+        <Component Id="CleanupTrackingComparisonData"
+                   Directory="TrackingComparisonDataFolder"
+                   Guid="e7b2c4d1-8f3a-4b5c-9d6e-7f8a9b0c1d2e">
+            <RegistryValue Root="HKCU"
+                           Key="Software\AliaksandrPidlazhevich\RevitTrackingComparison"
+                           Name="TrackingDataPath"
+                           Type="string"
+                           Value="[TrackingComparisonDataFolder]"
+                           KeyPath="yes"/>
+            <util:RemoveFolderEx Id="RemoveTrackingComparisonData"
+                                 On="uninstall"
+                                 Property="TRACKINGDATAFOLDER_PROP"/>
+            <RemoveFolder Id="RemoveTrackingComparisonDataFolder" On="uninstall"/>
+        </Component>
+
+        <Component Id="RevitAddInManifest"
+                   Directory="Revit2026Folder"
+                   Guid="f3a8b2c1-4d5e-6f7a-8b9c-0d1e2f3a4b5c">
+            <File Id="RevitAddInManifestFile"
+                  Name="RevitTrackingComparison.addin"
+                  Source="RevitTrackingComparison.addin"
+                  KeyPath="yes"/>
+            <util:XmlFile Id="SetRevitAddInAssemblyPath"
+                          File="[#RevitAddInManifestFile]"
+                          ElementPath="/RevitAddIns/AddIn/Assembly"
+                          Action="setValue"
+                          Value="[INSTALLFOLDER]RevitTrackingComparison.Revit.dll"
+                          Sequence="1"/>
+        </Component>
+
+        <ComponentGroup Id="AddInFiles" Directory="INSTALLFOLDER">
+            <Files Include="$(var.RevitAddIn.TargetDir)**">
+                <Exclude Files="$(var.RevitAddIn.TargetDir)**\*.pdb" />
+                <Exclude Files="$(var.RevitAddIn.TargetDir)**\*.deps.json" />
+                <Exclude Files="$(var.RevitAddIn.TargetDir)**\RevitTrackingComparison.addin" />
+            </Files>
+        </ComponentGroup>
+    </Fragment>
+
+</Wix>

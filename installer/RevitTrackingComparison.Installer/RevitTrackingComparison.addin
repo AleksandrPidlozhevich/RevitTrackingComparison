@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RevitAddIns>
+  <AddIn Type="Application">
+    <Name>RevitTrackingComparison</Name>
+    <Assembly>RevitTrackingComparison.Revit.dll</Assembly>
+    <AddInId>610ef1cb-518b-4d99-9e11-7354c31e0a60</AddInId>
+    <FullClassName>RevitTrackingComparison.Revit.Application.RevitTrackingApplication</FullClassName>
+    <VendorId>AliaksandrP</VendorId>
+    <VendorDescription>https://github.com/AleksandrPidlozhevich</VendorDescription>
+  </AddIn>
+</RevitAddIns>
