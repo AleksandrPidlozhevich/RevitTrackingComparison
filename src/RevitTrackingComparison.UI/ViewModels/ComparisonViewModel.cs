@@ -51,9 +51,9 @@ public partial class ComparisonViewModel : ObservableObject
 
     public void Load(SnapshotDiff? diff)
     {
-        ReplaceAll(Added, diff?.Added, useAfter: true);
-        ReplaceAll(Removed, diff?.Removed, useAfter: false);
-        ReplaceAll(Modified, diff?.Modified, useAfter: true);
+        ReplaceAll(Added, diff?.Added, true);
+        ReplaceAll(Removed, diff?.Removed, false);
+        ReplaceAll(Modified, diff?.Modified, true);
         SelectedModified = null;
         SelectedAdded = null;
 
@@ -80,9 +80,15 @@ public partial class ComparisonViewModel : ObservableObject
         ModifiedView.Refresh();
     }
 
-    partial void OnSelectedModifiedChanged(ElementRowViewModel? value) => Populate(SelectedParameters, value?.Source);
+    partial void OnSelectedModifiedChanged(ElementRowViewModel? value)
+    {
+        Populate(SelectedParameters, value?.Source);
+    }
 
-    partial void OnSelectedAddedChanged(ElementRowViewModel? value) => Populate(SelectedAddedParameters, value?.Source);
+    partial void OnSelectedAddedChanged(ElementRowViewModel? value)
+    {
+        Populate(SelectedAddedParameters, value?.Source);
+    }
 
     private bool Matches(object item)
     {
@@ -92,12 +98,14 @@ public partial class ComparisonViewModel : ObservableObject
         var row = (ElementRowViewModel)item;
         var term = SearchText.Trim();
         return Contains(row.Category, term)
-            || Contains(row.Name, term)
-            || Contains(row.UniqueId, term)
-            || Contains(row.ElementId.ToString(CultureInfo.InvariantCulture), term);
+               || Contains(row.Name, term)
+               || Contains(row.UniqueId, term)
+               || Contains(row.ElementId.ToString(CultureInfo.InvariantCulture), term);
 
-        static bool Contains(string source, string term) =>
-            source.Contains(term, StringComparison.OrdinalIgnoreCase);
+        static bool Contains(string source, string term)
+        {
+            return source.Contains(term, StringComparison.OrdinalIgnoreCase);
+        }
     }
 
     private void Populate(ObservableCollection<ParameterRowViewModel> target, ElementChange? element)

@@ -17,14 +17,11 @@ public partial class SnapshotExportViewModel : ObservableObject
 
     public ObservableCollection<SnapshotInfo> Snapshots { get; } = new();
 
-    [ObservableProperty]
-    private SnapshotInfo? _selectedSnapshot;
+    [ObservableProperty] private SnapshotInfo? _selectedSnapshot;
 
-    [ObservableProperty]
-    private string _status = string.Empty;
+    [ObservableProperty] private string _status = string.Empty;
 
-    [ObservableProperty]
-    private bool _isExporting;
+    [ObservableProperty] private bool _isExporting;
 
     public string Project { get; }
 
@@ -41,9 +38,15 @@ public partial class SnapshotExportViewModel : ObservableObject
         Status = Snapshots.Count == 0 ? "No snapshots available for this project." : string.Empty;
     }
 
-    partial void OnSelectedSnapshotChanged(SnapshotInfo? value) => ExportCommand.NotifyCanExecuteChanged();
+    partial void OnSelectedSnapshotChanged(SnapshotInfo? value)
+    {
+        ExportCommand.NotifyCanExecuteChanged();
+    }
 
-    partial void OnIsExportingChanged(bool value) => ExportCommand.NotifyCanExecuteChanged();
+    partial void OnIsExportingChanged(bool value)
+    {
+        ExportCommand.NotifyCanExecuteChanged();
+    }
 
     [RelayCommand(CanExecute = nameof(CanExport))]
     private void Export()

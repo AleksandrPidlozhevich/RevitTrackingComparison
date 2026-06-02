@@ -27,5 +27,8 @@ public sealed class RevitModelMetadataProvider : IModelMetadataProvider, IDispos
         return completion.Task;
     }
 
-    public void Dispose() => _externalEvent.Dispose();
+    public void Dispose()
+    {
+        _externalEvent.Dispose();
+    }
 }

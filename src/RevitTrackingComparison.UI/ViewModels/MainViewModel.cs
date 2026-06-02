@@ -34,13 +34,14 @@ public partial class MainViewModel : ObservableObject
 
     public string Project { get; }
 
-    [ObservableProperty]
-    private string _status = string.Empty;
+    [ObservableProperty] private string _status = string.Empty;
 
-    [ObservableProperty]
-    private bool _isBusy;
+    [ObservableProperty] private bool _isBusy;
 
-    partial void OnIsBusyChanged(bool value) => TakeSnapshotCommand.NotifyCanExecuteChanged();
+    partial void OnIsBusyChanged(bool value)
+    {
+        TakeSnapshotCommand.NotifyCanExecuteChanged();
+    }
 
     [RelayCommand(CanExecute = nameof(CanTakeSnapshot))]
     private async Task TakeSnapshotAsync()
@@ -92,11 +93,20 @@ public partial class MainViewModel : ObservableObject
     private bool CanTakeSnapshot => !IsBusy;
 
     [RelayCommand]
-    private void OpenSettings() => _openSettings();
+    private void OpenSettings()
+    {
+        _openSettings();
+    }
 
     [RelayCommand]
-    private void OpenCompare() => _openCompare();
+    private void OpenCompare()
+    {
+        _openCompare();
+    }
 
     [RelayCommand]
-    private void OpenExport() => _openExport();
+    private void OpenExport()
+    {
+        _openExport();
+    }
 }

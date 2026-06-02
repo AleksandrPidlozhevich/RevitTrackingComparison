@@ -66,23 +66,31 @@ public sealed class JsonCaptureSettingsStore : ICaptureSettingsStore
         }
     }
 
-    private static CaptureSettings Default() => new()
+    private static CaptureSettings Default()
     {
-        Rules = new[]
+        return new CaptureSettings
         {
-            new CaptureRule { Category = "Walls", Parameters = new[] { "Base Offset", "Unconnected Height" } },
-            new CaptureRule { Category = "Doors", Parameters = new[] { "Height", "Width" } },
-        },
-    };
+            Rules = new[]
+            {
+                new CaptureRule { Category = "Walls", Parameters = new[] { "Base Offset", "Unconnected Height" } },
+                new CaptureRule { Category = "Doors", Parameters = new[] { "Height", "Width" } }
+            }
+        };
+    }
 
     private sealed class SettingsDto
     {
         public List<RuleDto> Rules { get; set; } = new();
 
-        public CaptureSettings ToDomain() => new() { Rules = Rules.Select(r => r.ToDomain()).ToList() };
+        public CaptureSettings ToDomain()
+        {
+            return new CaptureSettings { Rules = Rules.Select(r => r.ToDomain()).ToList() };
+        }
 
-        public static SettingsDto FromDomain(CaptureSettings settings) =>
-            new() { Rules = settings.Rules.Select(RuleDto.FromDomain).ToList() };
+        public static SettingsDto FromDomain(CaptureSettings settings)
+        {
+            return new SettingsDto { Rules = settings.Rules.Select(RuleDto.FromDomain).ToList() };
+        }
     }
 
     private sealed class RuleDto
@@ -91,9 +99,14 @@ public sealed class JsonCaptureSettingsStore : ICaptureSettingsStore
 
         public List<string> Parameters { get; set; } = new();
 
-        public CaptureRule ToDomain() => new() { Category = Category, Parameters = Parameters.ToList() };
+        public CaptureRule ToDomain()
+        {
+            return new CaptureRule { Category = Category, Parameters = Parameters.ToList() };
+        }
 
-        public static RuleDto FromDomain(CaptureRule rule) =>
-            new() { Category = rule.Category, Parameters = rule.Parameters.ToList() };
+        public static RuleDto FromDomain(CaptureRule rule)
+        {
+            return new RuleDto { Category = rule.Category, Parameters = rule.Parameters.ToList() };
+        }
     }
 }

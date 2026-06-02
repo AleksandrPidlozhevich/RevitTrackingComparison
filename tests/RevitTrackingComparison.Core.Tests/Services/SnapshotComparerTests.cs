@@ -9,7 +9,10 @@ public sealed class SnapshotComparerTests
     private SnapshotComparer _sut = null!;
 
     [SetUp]
-    public void SetUp() => _sut = new SnapshotComparer();
+    public void SetUp()
+    {
+        _sut = new SnapshotComparer();
+    }
 
     [Test]
     public void Compare_identical_snapshots_returns_no_changes()
@@ -89,7 +92,8 @@ public sealed class SnapshotComparerTests
     {
         var parameters = new Dictionary<string, string> { ["Height"] = "3000" };
         var from = SnapshotTestData.CreateSnapshot(SnapshotTestData.Element(parameters: parameters));
-        var to = SnapshotTestData.CreateSnapshot(SnapshotTestData.Element(parameters: new Dictionary<string, string>(parameters)));
+        var to = SnapshotTestData.CreateSnapshot(
+            SnapshotTestData.Element(parameters: new Dictionary<string, string>(parameters)));
 
         var diff = _sut.Compare(from, to);
 

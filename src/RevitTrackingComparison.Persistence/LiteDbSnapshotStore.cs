@@ -47,7 +47,9 @@ public sealed class LiteDbSnapshotStore : ISnapshotStore
         try
         {
             using (var db = _connectionFactory.Open(path))
+            {
                 db.GetCollection<SnapshotEntity>(Snapshots).Insert(snapshot.ToEntity());
+            }
         }
         catch (Exception ex)
         {
@@ -105,7 +107,10 @@ public sealed class LiteDbSnapshotStore : ISnapshotStore
         }
     }
 
-    private string ProjectFolder(string safeProject) => Path.Combine(_options.SnapshotsFolder, safeProject);
+    private string ProjectFolder(string safeProject)
+    {
+        return Path.Combine(_options.SnapshotsFolder, safeProject);
+    }
 
     private static string UniqueFileName(string folder, string safeProject, DateTime capturedAt)
     {

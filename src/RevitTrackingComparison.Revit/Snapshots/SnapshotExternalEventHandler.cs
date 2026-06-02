@@ -35,8 +35,10 @@ internal sealed class SnapshotExternalEventHandler : IExternalEventHandler
         _logger = logger;
     }
 
-    public void Enqueue(TaskCompletionSource<SnapshotResult> completion, IProgress<SnapshotProgress>? progress) =>
+    public void Enqueue(TaskCompletionSource<SnapshotResult> completion, IProgress<SnapshotProgress>? progress)
+    {
         _queue.Enqueue(new SnapshotRequest(completion, progress));
+    }
 
     public void Execute(UIApplication app)
     {
@@ -127,7 +129,10 @@ internal sealed class SnapshotExternalEventHandler : IExternalEventHandler
         _session = null;
     }
 
-    public string GetName() => "RevitTrackingComparison.TakeSnapshot";
+    public string GetName()
+    {
+        return "RevitTrackingComparison.TakeSnapshot";
+    }
 
     private void Persist(DocumentSnapshot snapshot, TaskCompletionSource<SnapshotResult> completion)
     {

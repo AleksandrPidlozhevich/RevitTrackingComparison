@@ -28,9 +28,23 @@ public partial class ElementRowViewModel : ObservableObject
     public string Name { get; }
     public int Changes { get; }
 
-    [RelayCommand] private void CopyId() => Copy(ElementId.ToString(CultureInfo.InvariantCulture));
-    [RelayCommand] private void CopyUniqueId() => Copy(UniqueId);
-    [RelayCommand] private void CopyName() => Copy(Name);
+    [RelayCommand]
+    private void CopyId()
+    {
+        Copy(ElementId.ToString(CultureInfo.InvariantCulture));
+    }
+
+    [RelayCommand]
+    private void CopyUniqueId()
+    {
+        Copy(UniqueId);
+    }
+
+    [RelayCommand]
+    private void CopyName()
+    {
+        Copy(Name);
+    }
 
     private static void Copy(string text)
     {

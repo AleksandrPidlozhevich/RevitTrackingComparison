@@ -20,14 +20,11 @@ public partial class SnapshotCompareViewModel : ObservableObject
 
     public ObservableCollection<SnapshotInfo> Snapshots { get; } = new();
 
-    [ObservableProperty]
-    private SnapshotInfo? _from;
+    [ObservableProperty] private SnapshotInfo? _from;
 
-    [ObservableProperty]
-    private SnapshotInfo? _to;
+    [ObservableProperty] private SnapshotInfo? _to;
 
-    [ObservableProperty]
-    private string _status = string.Empty;
+    [ObservableProperty] private string _status = string.Empty;
 
     public string Project { get; }
 
@@ -47,7 +44,7 @@ public partial class SnapshotCompareViewModel : ObservableObject
         foreach (var info in store.List(project)) // newest first
             Snapshots.Add(info);
 
-        To = Snapshots.FirstOrDefault();                            // newest
+        To = Snapshots.FirstOrDefault(); // newest
         From = Snapshots.Count > 1 ? Snapshots[^1] : Snapshots.FirstOrDefault(); // oldest
     }
 

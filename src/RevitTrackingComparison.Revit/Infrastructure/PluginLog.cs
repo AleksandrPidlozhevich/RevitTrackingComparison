@@ -53,7 +53,8 @@ public static class PluginLog
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"RevitTrackingComparison: failed to configure file logging: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine(
+                $"RevitTrackingComparison: failed to configure file logging: {ex.Message}");
             TryConfigureFallbackTarget();
         }
 

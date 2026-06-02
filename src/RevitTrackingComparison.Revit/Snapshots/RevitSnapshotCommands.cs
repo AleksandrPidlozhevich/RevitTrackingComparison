@@ -24,5 +24,8 @@ public sealed class RevitSnapshotCommands : ISnapshotCommands, IDisposable
         return completion.Task;
     }
 
-    public void Dispose() => _externalEvent.Dispose();
+    public void Dispose()
+    {
+        _externalEvent.Dispose();
+    }
 }

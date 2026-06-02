@@ -10,8 +10,8 @@
     <ItemGroup>
         <PackageReference Include="ModPlus.Revit.API.2026" Version="6.0.0"
                           PrivateAssets="all" ExcludeAssets="runtime"/>
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.8" />
-        <PackageReference Include="NLog" Version="6.1.3" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.8"/>
+        <PackageReference Include="NLog" Version="6.1.3"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -21,10 +21,10 @@
     </ItemGroup>
 
     <ItemGroup>
-        <EmbeddedResource Include="Resources\ab-testing.png" />
+        <EmbeddedResource Include="Resources\ab-testing.png"/>
     </ItemGroup>
 
-        <ItemGroup>
+    <ItemGroup>
         <None Update="RevitTrackingComparison.addin">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>

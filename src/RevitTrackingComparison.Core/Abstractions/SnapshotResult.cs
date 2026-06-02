@@ -8,7 +8,13 @@ namespace RevitTrackingComparison.Core.Abstractions;
 /// </summary>
 public sealed record SnapshotResult(bool Success, string Message, SnapshotInfo? Info)
 {
-    public static SnapshotResult Ok(SnapshotInfo info) => new(true, string.Empty, info);
+    public static SnapshotResult Ok(SnapshotInfo info)
+    {
+        return new SnapshotResult(true, string.Empty, info);
+    }
 
-    public static SnapshotResult Fail(string message) => new(false, message, null);
+    public static SnapshotResult Fail(string message)
+    {
+        return new SnapshotResult(false, message, null);
+    }
 }

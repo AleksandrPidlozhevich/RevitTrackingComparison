@@ -5,8 +5,10 @@ namespace RevitTrackingComparison.Core.Tests.Domain;
 [TestFixture]
 public sealed class CaptureSettingsTests
 {
-    private static CaptureSettings CreateSettings(params CaptureRule[] rules) =>
-        new() { Rules = rules };
+    private static CaptureSettings CreateSettings(params CaptureRule[] rules)
+    {
+        return new CaptureSettings { Rules = rules };
+    }
 
     [Test]
     public void IncludesCategory_is_case_insensitive()

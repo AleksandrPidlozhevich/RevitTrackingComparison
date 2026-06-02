@@ -16,11 +16,15 @@ public sealed class RevitModelEditor : IModelEditor, IDisposable
 
     public Task<ParameterEditResult> SetParameterValueAsync(string uniqueId, string parameterName, string value)
     {
-        var completion = new TaskCompletionSource<ParameterEditResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var completion =
+            new TaskCompletionSource<ParameterEditResult>(TaskCreationOptions.RunContinuationsAsynchronously);
         _handler.Enqueue(uniqueId, parameterName, value, completion);
         _externalEvent.Raise();
         return completion.Task;
     }
 
-    public void Dispose() => _externalEvent.Dispose();
+    public void Dispose()
+    {
+        _externalEvent.Dispose();
+    }
 }

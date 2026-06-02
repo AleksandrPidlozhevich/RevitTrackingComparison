@@ -14,7 +14,7 @@ public static class SnapshotCsvExporter
 
     public static void ExportToFile(DocumentSnapshot snapshot, string filePath)
     {
-        using var writer = new StreamWriter(filePath, append: false, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
+        using var writer = new StreamWriter(filePath, false, new UTF8Encoding(true));
         Export(snapshot, writer);
     }
 

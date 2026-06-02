@@ -41,13 +41,16 @@ public sealed class CaptureSession
         }
     }
 
-    public DocumentSnapshot BuildSnapshot() => new()
+    public DocumentSnapshot BuildSnapshot()
     {
-        DocumentKey = RevitDocumentKey.Compute(_doc),
-        Title = _doc.Title,
-        CapturedAt = _capturedAt,
-        Elements = _elements
-    };
+        return new DocumentSnapshot
+        {
+            DocumentKey = RevitDocumentKey.Compute(_doc),
+            Title = _doc.Title,
+            CapturedAt = _capturedAt,
+            Elements = _elements
+        };
+    }
 
     private static ElementSnapshot Map(Element element, CaptureSettings settings)
     {

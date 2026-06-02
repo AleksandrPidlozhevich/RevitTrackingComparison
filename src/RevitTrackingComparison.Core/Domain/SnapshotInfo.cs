@@ -12,8 +12,7 @@ public sealed class SnapshotInfo
     public string FileName { get; init; } = string.Empty;
 
     public DateTime CapturedAt { get; init; }
-    
+
     public string DisplayName =>
         CapturedAt.ToString("dd.MM.yyyy HH:mm:ss", CultureInfo.CurrentCulture);
 }
- 

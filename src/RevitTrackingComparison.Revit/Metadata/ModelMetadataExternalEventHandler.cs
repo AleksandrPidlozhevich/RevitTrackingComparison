@@ -16,17 +16,23 @@ internal sealed class ModelMetadataExternalEventHandler : IExternalEventHandler
     private const int MaxElementsPerCategory = 200;
 
     private readonly IPluginLogger _logger;
-    private readonly ConcurrentQueue<TaskCompletionSource<IReadOnlyDictionary<string, IReadOnlyList<string>>>> _queue = new();
 
-    public ModelMetadataExternalEventHandler(IPluginLogger logger) => _logger = logger;
+    private readonly ConcurrentQueue<TaskCompletionSource<IReadOnlyDictionary<string, IReadOnlyList<string>>>> _queue =
+        new();
+
+    public ModelMetadataExternalEventHandler(IPluginLogger logger)
+    {
+        _logger = logger;
+    }
 
     public void Enqueue(TaskCompletionSource<IReadOnlyDictionary<string, IReadOnlyList<string>>> completion)
-        => _queue.Enqueue(completion);
+    {
+        _queue.Enqueue(completion);
+    }
 
     public void Execute(UIApplication app)
     {
         while (_queue.TryDequeue(out var completion))
-        {
             try
             {
                 var doc = app.ActiveUIDocument?.Document;
@@ -44,13 +50,17 @@ internal sealed class ModelMetadataExternalEventHandler : IExternalEventHandler
                 _logger.Error(ex, "Failed to read model metadata.");
                 completion.TrySetException(ex);
             }
-        }
     }
 
-    public string GetName() => "RevitTrackingComparison.ModelMetadata";
+    public string GetName()
+    {
+        return "RevitTrackingComparison.ModelMetadata";
+    }
 
     private static IReadOnlyDictionary<string, IReadOnlyList<string>> Empty()
-        => new Dictionary<string, IReadOnlyList<string>>();
+    {
+        return new Dictionary<string, IReadOnlyList<string>>();
+    }
 
     private static IReadOnlyDictionary<string, IReadOnlyList<string>> BuildCatalog(Document doc)
     {

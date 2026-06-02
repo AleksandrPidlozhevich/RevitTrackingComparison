@@ -13,6 +13,5 @@ public partial class ParameterChoiceViewModel : ObservableObject
 
     public string Name { get; }
 
-    [ObservableProperty]
-    private bool _isSelected;
+    [ObservableProperty] private bool _isSelected;
 }

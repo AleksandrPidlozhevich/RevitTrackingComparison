@@ -13,7 +13,10 @@ internal sealed class ParameterEditExternalEventHandler : IExternalEventHandler
     private readonly IPluginLogger _logger;
     private readonly ConcurrentQueue<EditRequest> _queue = new();
 
-    public ParameterEditExternalEventHandler(IPluginLogger logger) => _logger = logger;
+    public ParameterEditExternalEventHandler(IPluginLogger logger)
+    {
+        _logger = logger;
+    }
 
     private readonly record struct EditRequest(
         string UniqueId,
@@ -23,13 +26,14 @@ internal sealed class ParameterEditExternalEventHandler : IExternalEventHandler
 
     public void Enqueue(
         string uniqueId, string parameterName, string value,
-        TaskCompletionSource<ParameterEditResult> completion) =>
+        TaskCompletionSource<ParameterEditResult> completion)
+    {
         _queue.Enqueue(new EditRequest(uniqueId, parameterName, value, completion));
+    }
 
     public void Execute(UIApplication app)
     {
         while (_queue.TryDequeue(out var request))
-        {
             try
             {
                 request.Completion.TrySetResult(Apply(app, request));
@@ -40,10 +44,12 @@ internal sealed class ParameterEditExternalEventHandler : IExternalEventHandler
                     $"Failed to edit parameter '{request.ParameterName}' on element '{request.UniqueId}'.");
                 request.Completion.TrySetResult(ParameterEditResult.Fail("Parameter edit failed."));
             }
-        }
     }
 
-    public string GetName() => "RevitTrackingComparison.EditParameter";
+    public string GetName()
+    {
+        return "RevitTrackingComparison.EditParameter";
+    }
 
     private ParameterEditResult Apply(UIApplication app, EditRequest request)
     {
@@ -77,12 +83,15 @@ internal sealed class ParameterEditExternalEventHandler : IExternalEventHandler
     }
 
     // Symmetric with the snapshot read: doubles go through SetValueString (display units), others typed.
-    private static bool TrySet(Parameter parameter, string value) => parameter.StorageType switch
+    private static bool TrySet(Parameter parameter, string value)
     {
-        StorageType.Double => parameter.SetValueString(value),
-        StorageType.Integer => int.TryParse(value, out var i) && parameter.Set(i),
-        StorageType.String => parameter.Set(value),
-        StorageType.ElementId => long.TryParse(value, out var id) && parameter.Set(new ElementId(id)),
-        _ => false
-    };
+        return parameter.StorageType switch
+        {
+            StorageType.Double => parameter.SetValueString(value),
+            StorageType.Integer => int.TryParse(value, out var i) && parameter.Set(i),
+            StorageType.String => parameter.Set(value),
+            StorageType.ElementId => long.TryParse(value, out var id) && parameter.Set(new ElementId(id)),
+            _ => false
+        };
+    }
 }

@@ -8,10 +8,14 @@ public sealed class CaptureSettings
 {
     public IReadOnlyList<CaptureRule> Rules { get; init; } = Array.Empty<CaptureRule>();
 
-    public bool IncludesCategory(string category) =>
-        Rules.Any(r => string.Equals(r.Category, category, StringComparison.OrdinalIgnoreCase));
+    public bool IncludesCategory(string category)
+    {
+        return Rules.Any(r => string.Equals(r.Category, category, StringComparison.OrdinalIgnoreCase));
+    }
 
-    public IReadOnlyList<string> ParametersFor(string category) =>
-        Rules.FirstOrDefault(r => string.Equals(r.Category, category, StringComparison.OrdinalIgnoreCase))
+    public IReadOnlyList<string> ParametersFor(string category)
+    {
+        return Rules.FirstOrDefault(r => string.Equals(r.Category, category, StringComparison.OrdinalIgnoreCase))
             ?.Parameters ?? Array.Empty<string>();
+    }
 }

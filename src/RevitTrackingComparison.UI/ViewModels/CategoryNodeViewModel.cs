@@ -17,8 +17,7 @@ public partial class CategoryNodeViewModel : ObservableObject
 
     public string Name { get; }
 
-    [ObservableProperty]
-    private bool _isIncluded;
+    [ObservableProperty] private bool _isIncluded;
 
     public ObservableCollection<ParameterChoiceViewModel> Parameters { get; } = new();
 }

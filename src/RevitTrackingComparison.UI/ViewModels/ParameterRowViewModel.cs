@@ -34,7 +34,10 @@ public partial class ParameterRowViewModel : ObservableObject
     [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private string _status = string.Empty;
 
-    partial void OnIsBusyChanged(bool value) => SaveCommand.NotifyCanExecuteChanged();
+    partial void OnIsBusyChanged(bool value)
+    {
+        SaveCommand.NotifyCanExecuteChanged();
+    }
 
     [RelayCommand]
     private void BeginEdit()

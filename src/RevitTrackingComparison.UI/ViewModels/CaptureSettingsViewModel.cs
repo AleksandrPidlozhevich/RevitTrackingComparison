@@ -21,14 +21,11 @@ public partial class CaptureSettingsViewModel : ObservableObject
 
     public ObservableCollection<CategoryNodeViewModel> Categories { get; } = new();
 
-    [ObservableProperty]
-    private CategoryNodeViewModel? _selectedCategory;
+    [ObservableProperty] private CategoryNodeViewModel? _selectedCategory;
 
-    [ObservableProperty]
-    private string _status = string.Empty;
+    [ObservableProperty] private string _status = string.Empty;
 
-    [ObservableProperty]
-    private bool _isLoading;
+    [ObservableProperty] private bool _isLoading;
 
     public CaptureSettingsViewModel(
         ICaptureSettingsStore store,
@@ -67,19 +64,34 @@ public partial class CaptureSettingsViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private Task Reload() => LoadFromModelAsync();
+    private Task Reload()
+    {
+        return LoadFromModelAsync();
+    }
 
     [RelayCommand]
-    private void SelectAllCategories() => SetAllCategories(true);
+    private void SelectAllCategories()
+    {
+        SetAllCategories(true);
+    }
 
     [RelayCommand]
-    private void ClearAllCategories() => SetAllCategories(false);
+    private void ClearAllCategories()
+    {
+        SetAllCategories(false);
+    }
 
     [RelayCommand]
-    private void SelectAllParameters() => SetAllParameters(true);
+    private void SelectAllParameters()
+    {
+        SetAllParameters(true);
+    }
 
     [RelayCommand]
-    private void ClearAllParameters() => SetAllParameters(false);
+    private void ClearAllParameters()
+    {
+        SetAllParameters(false);
+    }
 
     [RelayCommand]
     private void Save()
@@ -143,7 +155,7 @@ public partial class CaptureSettingsViewModel : ObservableObject
             foreach (var name in selected) parameterNames.Add(name); // keep config params not in the model sample
 
             // Included = the category is part of the saved config.
-            var node = new CategoryNodeViewModel(categoryName, isIncluded: rule is not null);
+            var node = new CategoryNodeViewModel(categoryName, rule is not null);
             foreach (var name in parameterNames)
                 node.Parameters.Add(new ParameterChoiceViewModel(name, selected.Contains(name, Ci)));
 
