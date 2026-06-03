@@ -1,7 +1,5 @@
 # Revit Tracking Comparison
 
-[Русский](README.ru.md)
-
 A Revit 2026 add-in that captures the state of your model over time and compares two snapshots to show what changed—added, removed, or modified elements and parameters.
 
 ## What it does
